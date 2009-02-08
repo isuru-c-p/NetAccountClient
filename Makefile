@@ -7,13 +7,13 @@ SOURCE = NetLogin.java \
 		PasswordChanger.java \
 		SPP_Packet.java
 
-all: NetLogin.jar
+all: JNetLogin.jar
 
-NetLogin.jar: $(SOURCE)
+JNetLogin.jar: $(SOURCE)
 	javac -g:none $(SOURCE)
-	jar cf NetLogin.jar *.class nz
+	jar cf JNetLogin.jar *.class nz
 	rm *.class
-	echo -e "\nUsage: java -cp NetLogin.jar NetLogin\n"
+	echo -e "\nUsage: java -cp JNetLogin.jar NetLogin\n"
 
 clean:
-	rm NetLogin.jar
+	rm JNetLogin.jar
