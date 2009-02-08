@@ -60,11 +60,11 @@ public class PingRespHandler extends Thread {
 		int random_returned;
 		int Seq_number_returned;
 		int packet_length;
-		int IP_balance;
+		int IP_usage;
 		int Command;
 		int message_length;
 		int bad = 0;
-		int OnPeak = 0;
+		int OnPlan = 0;
 			
 		setPriority( Thread.MAX_PRIORITY / 4 );
 		while( loop && bad < 10 && pinger.getOutstandingPings() < 5 ){
@@ -107,13 +107,24 @@ public class PingRespHandler extends Thread {
 				
 				Next_Sequence_Number_Expected  = Seq_number_returned + 1;  //Catch up.
 				
-				IP_balance = des_in.readInt();
+				
+				
+				/* from client version 3, These will be replaced by display user Internet Plan and monthly usage*/
+				//IP_balance = des_in.readInt();
+				IP_usage = des_in.readInt();
+				
 				Command	 = des_in.readInt();
-				OnPeak = des_in.readInt();
+				
+				//OnPeak = des_in.readInt();
+				OnPlan=des_in.readInt();
+				
 				message_length = des_in.readInt();
 				message = new byte[ message_length ];
 				des_in.read( message );
-				netLogin.update( IP_balance, ( OnPeak & 0x01 ) == 0x01, true, new String( message ) );
+				
+				//netLogin.update( IP_balance, ( OnPeak & 0x01 ) == 0x01, true, new String( message ) );
+				netLogin.updateV3(IP_usage,OnPlan,true,new String(message));
+				
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
 

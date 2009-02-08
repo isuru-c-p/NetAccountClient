@@ -41,7 +41,7 @@ class NetLoginPreferences{
 			p.put( "altServer", "gate.ec.auckland.ac.nz" );
 			p.put( "useStaticPingPort", "false" );
 		}else{
-			System.err.println( "Unknown OS: " + System.getProperty( "os.name" ) + ", using defaults.");
+			//System.err.println( "Unknown OS: " + System.getProperty( "os.name" ) + ", using defaults.");
 			p.put( "mainDialogX", "50" );
 			p.put( "mainDialogY", "50" );
 			p.put( "mainDialogWidth", "150" );
@@ -56,76 +56,10 @@ class NetLoginPreferences{
 			p.put( "useStaticPingPort", "false" );
 		}
 
-/*
- * We dont save or load preferences anymore, because getting window
- * attributes often returned rubbish
- *
-		if( System.getProperty( "os.name" ).equals( "Linux" ) ||
-			System.getProperty( "os.name" ).equals( "Mac OS X" ) ||
-			System.getProperty( "os.name" ).indexOf( "nix" ) != -1 ){
-			// were on a unix of some sort.
-			try{
-				p.load( new FileInputStream( System.getProperty( "user.home" ) + "/.JNetLogin/preferences" ) );
-			}catch( Exception e ){
-				// prolly a new user, fall back on defaults
-				File f = new File( System.getProperty( "user.home" ) + "/.JNetLogin");
-				try{
-					f.mkdirs();
-				} catch( Exception ex ) {
-					System.err.println( "Unable to create ~/.JNetLogin: " + ex.getMessage() );
-				}
-				p.put( "mainDialogX", "50" );
-				p.put( "mainDialogY", "50" );
-				p.put( "mainDialogWidth", "150" );
-				p.put( "mainDialogHeight", "110" );
 
-				p.put( "loginDialogX", "100" );
-				p.put( "loginDialogY", "100" );
-				p.put( "loginDialogWidth", "200" );
-				p.put( "loginDialogHeight", "130" );
-				p.put( "useAltServer", "false" );
-				p.put( "altServer", "gate.ec.auckland.ac.nz" );
-				p.put( "useStaticPingPort", "false" );
-			}
-		} else {
-			// were on unknown (prolly windoze), fall back on defaults
-			System.err.println( "Unknown OS: " + System.getProperty( "os.name" ) );
-			p = new Properties();
-			p.put( "mainDialogX", "50" );
-			p.put( "mainDialogY", "50" );
-			p.put( "mainDialogWidth", "180" );
-			p.put( "mainDialogHeight", "120" );
-
-			p.put( "loginDialogX", "100" );
-			p.put( "loginDialogY", "100" );
-			p.put( "loginDialogWidth", "200" );
-			p.put( "loginDialogHeight", "120" );
-			p.put( "useAltServer", "false" );
-			p.put( "altServer", "gate.ec.auckland.ac.nz" );
-			p.put( "useStaticPingPort", "false" );
-		}
- */
 	}
 
 	public void savePreferences(){
-/*
- * We dont save or load preferences anymore, because getting window
- * attributes often returned rubbish
- *
-		if( System.getProperty( "os.name" ).equals( "Linux" ) ||
-			System.getProperty( "os.name" ).equals( "Mac OS X" ) ||
-			System.getProperty( "os.name" ).indexOf( "nix" ) != -1 ){
-			// were on a unix
-			try{
-				p.store( new FileOutputStream( System.getProperty( "user.home" ) + "/.JNetLogin/preferences" ),
-						"JNetLogin Preferences" );
-			}catch( Exception e ){
-				System.err.println( "Unable to save preferences: " + e.getMessage() );
-			}
-		} else {
-			System.err.println( "Not saving preferences for unknown OS" );
-		}
- */
 	}
 
 	public void showPreferencesDialog(){
@@ -180,7 +114,8 @@ class NetLoginPreferences{
 		preferencesDialog.setContentPane( panel );
 		preferencesDialog.setBounds( 100, 100, 300, 130 );
 		preferencesDialog.setTitle( "JNetLogin - Preferences" );
-		preferencesDialog.show();
+		preferencesDialog.setVisible(true);
+		preferencesDialog.setLocationRelativeTo(null);
 	}
 
 	private void addExternal( JPanel panel, GridBagConstraints constraints, int x, int y,

@@ -8,8 +8,7 @@ import java.util.*;
 import nz.ac.auckland.cs.des.*;
 
 public class NetLoginConnection {
-	//From auth_commands.h
-	final String BKAUTH_SERVICE = "book_auth";
+	
 	final String AUTHD_SERVER	= "gate.ec.auckland.ac.nz";
 	final int AUTHD_PORT		= 312	; 	// The port that we are awaiting pings from.
 	final int PINGD_PORT		= 443	; 	// The port that we are awaiting pings from.
@@ -48,10 +47,16 @@ public class NetLoginConnection {
 	int Sequence_Number = 0;
 
 	Key_schedule schedule = null;				//set up encryption key to the users passwd
-	int	clienttype = NETGUARDIAN_JAVA_MCLIENT; 	//We are a multiuser client today
+	int	clienttype = NETGUARDIAN_JAVA_CLIENT; 	//We are a multiuser client today
 	int cmd_data_length	= 2; 					//Ping Ports size (sizeof( short ))
 	short	cmd_data = 0; 						//Port we want pings responses on
-	int	clientversion = 1;
+	
+	/* client version will control ping response messages:
+	 * when client version <3, quota-based Internet usage without user Internet plan
+	 * when client version >=3, usage-based Internet usage with displaying user plan
+	 */
+	int	clientversion = 3;	         
+	
 	int	Client_Rel_Version;
 	int	clientcommand = CMD_GET_USER_BALANCES_NO_BLOCK;
 

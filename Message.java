@@ -1,7 +1,7 @@
 import java.io.*;
 
 class Message implements Serializable{
-	private string s;
+	private String s;
 
 
 	public Message( String s ){
