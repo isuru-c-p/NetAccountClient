@@ -23,7 +23,7 @@
 
 <resources>
     <j2se href="http://java.sun.com/products/autodl/j2se" onclick="javascript:mytracker(this.href);" version="1.6 1.5 1.4+" max-heap-size="150m"/>
-    <jar href="JNetLogin.jar"/>
+    <jar href="signed_JNetLogin.jar"/>
 </resources>
 
 <application-desc main-class="NetLogin"/>
