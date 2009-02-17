@@ -5,7 +5,10 @@ import java.util.*;
 import nz.ac.auckland.cs.des.*;
 
 public class PingRespHandler extends Thread {
-	private NetLogin netLogin;
+	
+	private NetLoginGUI netLogingui=null;
+	private NetLoginCMD netLogincmd=null;
+	
 	//Response ping packet Commands
 	private final int ACK		= 1;	
 	private final int NACK		= 0; 	//will cause a shutdown.
@@ -16,26 +19,41 @@ public class PingRespHandler extends Thread {
     private int Next_Sequence_Number_Expected = 0;
 	private PingSender pinger;
 
-	public PingRespHandler( NetLogin netLogin, PingSender pinger ) throws IOException {
-		this.netLogin = netLogin;
+	public PingRespHandler( NetLoginGUI netLogin, PingSender pinger ) throws IOException {
+		this.netLogingui = netLogin;
+		this.pinger = pinger;
+		s = new DatagramSocket(); //Dynamic allocation of the Port Number 
+		s.setSoTimeout( 500 );	// set timeout to half a second
+	}
+	
+	public PingRespHandler( NetLoginCMD netLogin, PingSender pinger ) throws IOException {
+		this.netLogincmd = netLogin;
 		this.pinger = pinger;
 		s = new DatagramSocket(); //Dynamic allocation of the Port Number 
 		s.setSoTimeout( 500 );	// set timeout to half a second
 	}
 	
 	/*
-	 * Use supplied socket instead of makeing one with a dynamically
+	 * Use supplied socket instead of making one with a dynamically
 	 * allocated port, when using this send a responce port of 0, and 
 	 * Robs new ping daemon will just send ping responces to the same
 	 * port it recieves them on.
 	 */
-	public PingRespHandler( NetLogin netLogin, PingSender pinger,
+	public PingRespHandler( NetLoginGUI netLogin, PingSender pinger,
 				DatagramSocket socket ) throws IOException {
-		this.netLogin = netLogin;
+		this.netLogingui = netLogin;
 		this.pinger = pinger;
 		s = socket; //Use same socket we use for sending pings
 		s.setSoTimeout( 500 );	// set timeout to half a second
 	}
+	
+	public PingRespHandler( NetLoginCMD netLogin, PingSender pinger,
+			DatagramSocket socket ) throws IOException {
+	this.netLogincmd = netLogin;
+	this.pinger = pinger;
+	s = socket; //Use same socket we use for sending pings
+	s.setSoTimeout( 500 );	// set timeout to half a second
+}
 
 	public void prepare( int randomIn, int squenceNum, Key_schedule sched ){
 		inToken = randomIn;
@@ -68,8 +86,8 @@ public class PingRespHandler extends Thread {
 			
 		setPriority( Thread.MAX_PRIORITY / 4 );
 		while( loop && bad < 10 && pinger.getOutstandingPings() < 5 ){
+			
 			incomingPacket = new DatagramPacket( recvBytes, recvBytes.length );
-
 			try{
 				s.receive( incomingPacket );
 			} catch( InterruptedIOException e ){
@@ -108,7 +126,6 @@ public class PingRespHandler extends Thread {
 				Next_Sequence_Number_Expected  = Seq_number_returned + 1;  //Catch up.
 				
 				
-				
 				/* from client version 3, These will be replaced by display user Internet Plan and monthly usage*/
 				//IP_balance = des_in.readInt();
 				IP_usage = des_in.readInt();
@@ -123,22 +140,24 @@ public class PingRespHandler extends Thread {
 				des_in.read( message );
 				
 				//netLogin.update( IP_balance, ( OnPeak & 0x01 ) == 0x01, true, new String( message ) );
-				netLogin.updateV3(IP_usage,OnPlan,true,new String(message));
-				
+				if (netLogingui!=null) 	netLogingui.updateV3(IP_usage,OnPlan,true,new String(message));
+				if (netLogincmd!=null) 	netLogincmd.updateV3(IP_usage,OnPlan,true,new String(message));
+					
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
-
+				
 				if( Command == NACK ) {
 					end(); //kill own thread
 				}
-			} catch( IOException e ) {
-				System.out.println( "ping recv: IOException" );
+			} catch( Exception e ) {
+				System.out.println( "ping recv: Exception:"+e );
 				bad++;
 		    }
 		}
 		if( pinger.getOutstandingPings() < 5 ){
 			System.err.println( "Max outstanding pings reached, disconnecting" );
 		}
-		netLogin.update( 0, false, false );
+		if (netLogingui!=null)	netLogingui.update( 0, false, false );
+		if (netLogincmd!=null)	netLogincmd.update( 0, false, false );
 	}
 }

@@ -9,8 +9,10 @@ import nz.ac.auckland.cs.des.*;
 
 public class NetLoginConnection {
 	
-	final String AUTHD_SERVER	= "gate.ec.auckland.ac.nz";
-	final int AUTHD_PORT		= 312	; 	// The port that we are awaiting pings from.
+	//final String AUTHD_SERVER	= "jason2.netac.auckland.ac.nz";
+	final String AUTHD_SERVER	= "gate-dev.ec.auckland.ac.nz";
+	
+	final int AUTHD_PORT		= 312	; 	// The port that we are awaiting authd from.
 	final int PINGD_PORT		= 443	; 	// The port that we are awaiting pings from.
 
 	//Packet Types
@@ -78,26 +80,53 @@ public class NetLoginConnection {
 	int start_Peak; 				//TIME OF DAY IN MINUTES
 	int endPeak; 					//TIME OF DAY IN MINUTES
 	int lastModDate; 				//DATESTAMP FROM THE CHARGES FILE
-	NetLogin parent;
+	
+	NetLoginGUI parentgui=null;
+	NetLoginCMD parentcmd=null;
 
-	public NetLoginConnection( NetLogin parent ){
-		this.parent = parent;
+	public NetLoginConnection(NetLoginCMD parentcmd)
+	{
+		this.parentcmd=parentcmd;
+	}
+	public NetLoginConnection( NetLoginGUI parentgui ){
+		this.parentgui = parentgui;
 	}
 
-	public void login( String username, String password ) throws IOException{
-		login( AUTHD_SERVER, username, password );
-	}
+	public void logincmdline( String username, String password ) throws IOException{
+		logincmdline( AUTHD_SERVER, username, password );
+	}	
 
-	public void login( String server, String username, String password ) throws IOException{
-		int length;
-
-		this.username = username;
-		pinger = new PingSender( server, PINGD_PORT, parent );
+	public void logincmdline( String server, String username, String password ) throws IOException{
+		
+		pinger = new PingSender( server, PINGD_PORT, parentcmd );
 		if( useStaticPingPort ){
-			ping_receiver = new PingRespHandler( parent, pinger, pinger.getSocket() );
+			ping_receiver = new PingRespHandler( parentcmd, pinger, pinger.getSocket() );
 			Response_Port = 0;
 		} else {
-			ping_receiver = new PingRespHandler( parent, pinger );
+			ping_receiver = new PingRespHandler( parentcmd, pinger );
+			Response_Port = ping_receiver.getLocalPort();
+		}
+		
+		authenticate( server, username, password );
+		pinger.prepare( schedule, Auth_Ref, random2 + 2, Sequence_Number );
+		ping_receiver.prepare( random1 + 3, Sequence_Number, schedule );
+		ping_receiver.start();
+		pinger.start();
+	}
+	
+	public void login( String username, String password ) throws IOException{
+		login( AUTHD_SERVER, username, password );
+	}	
+
+	public void login( String server, String username, String password ) throws IOException{
+	
+		this.username = username;
+		pinger = new PingSender( server, PINGD_PORT, parentgui );
+		if( useStaticPingPort ){
+			ping_receiver = new PingRespHandler( parentgui, pinger, pinger.getSocket() );
+			Response_Port = 0;
+		} else {
+			ping_receiver = new PingRespHandler( parentgui, pinger );
 			Response_Port = ping_receiver.getLocalPort();
 		}
 		authenticate( server, username, password );
@@ -105,7 +134,7 @@ public class NetLoginConnection {
 		ping_receiver.prepare( random1 + 3, Sequence_Number, schedule );
 		ping_receiver.start();
 		pinger.start();
-		parent.update( IPBalance, ( OnPeak & 0x01 ) == 0x01, true  );
+		parentgui.update( IPBalance, ( OnPeak & 0x01 ) == 0x01, true  );
 	}
 
 	public void setUseStaticPingPort( boolean b ){
@@ -244,7 +273,6 @@ public class NetLoginConnection {
 	private void ReadSecondResponsePacket() throws IOException {
 		desDataInputStream des_in;
 		int random_returned;
-		byte tmp_buff[];
 		int ack;
 		int cmd_result_data_length;
 		DataInputStream	unencrypted_data_input_Stream = null;

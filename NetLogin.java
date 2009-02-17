@@ -1,11 +1,8 @@
-import java.awt.*;
 import java.io.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import static java.util.Arrays.*;
 
-import java.lang.reflect.Method;
-
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 /*
  * NetLogin.java
  * Mikey - 2001
@@ -13,479 +10,73 @@ import java.lang.reflect.Method;
  * This class is GUI for NetLoginConnection.
  * NB: GUI code is always pretty ugly.
  */
-public class NetLogin extends JFrame {
-	private JLabel upititle = new JLabel("UPI:  ");
-	private JLabel plantitle = new JLabel("Internet Plan:  ");
-	private JLabel usagetitle = new JLabel("MBs used this month:  ");
-	private JLabel statusLabel = new JLabel("Not Connected");
-	private JLabel planLabel = new JLabel("");
-	private JLabel usageLabel = new JLabel("");
-	private JTextField loginTF = new JTextField();
-	private JTextField passwordTF = new JPasswordField();
-	private NetLoginPreferences p = new NetLoginPreferences();
-	private JButton connectButton = new JButton("Connect...");
-	private JMenuItem loginMenuItem;
-	private JMenuItem changePWMenuItem;
-	private JDialog loginDialog;
-	private NetLoginConnection netLoginConnection = null;
-	private boolean connected = false;
-	private final Font globalFont = new Font("Dialog", Font.PLAIN, 12);
-	private final Font globalTitleFont = new Font("Dialog", Font.BOLD, 12);
-	private final Color globalTitleColor= new Color(51, 102, 255);
+public class NetLogin {
 	
-	static String helpURL="http://ec.auckland.ac.nz/net.htm";
-	static String passwdChangeURL="https://admin.ec.auckland.ac.nz/Passwd/";
-
-	public NetLogin() {
-		super("JNetLogin");
-		netLoginConnection = new NetLoginConnection(this);
-		makeLoginDialog();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(gbl);
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.anchor = GridBagConstraints.CENTER;
-
-		upititle.setFont(globalTitleFont);
-		plantitle.setFont(globalTitleFont);
-		usagetitle.setFont(globalTitleFont);
-		upititle.setForeground(globalTitleColor);
-		plantitle.setForeground(globalTitleColor);
-		usagetitle.setForeground(globalTitleColor);
+	public static void main(String[] args) throws Exception {
 		
-		statusLabel.setFont(globalFont);
-		planLabel.setFont(globalFont);
-		usageLabel.setFont(globalFont);
-
-		connectButton.setFont(globalTitleFont);
-		connectButton.setForeground(globalTitleColor);
-		connectButton.setToolTipText("Login to NetAccount");
-		connectButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (!connected)
-					loginDialog.setVisible(true);
-				else
-					disconnect();
-			}
-		});
-
-		addExternal(mainPanel, gbc, 0, 0, upititle,
-				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
-		addExternal(mainPanel, gbc, 0, 1, plantitle,
-				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
-		addExternal(mainPanel, gbc, 0, 2, usagetitle,
-				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
-		addExternal(mainPanel, gbc, 1, 0, statusLabel,
-				GridBagConstraints.VERTICAL, GridBagConstraints.WEST);
-		addExternal(mainPanel, gbc, 1, 1, planLabel,
-				GridBagConstraints.VERTICAL, GridBagConstraints.WEST);
-		addExternal(mainPanel, gbc, 1, 2, usageLabel,
-				GridBagConstraints.VERTICAL, GridBagConstraints.WEST);
-		addExternal(mainPanel, gbc, 0, 3, new JSeparator(),
-				GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
-		addExternal(mainPanel, gbc, 1, 3, new JSeparator(),
-				GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
-		addExternal(mainPanel, gbc, 1, 4, connectButton,
-				GridBagConstraints.NONE, GridBagConstraints.CENTER);
-
-		makeMenuBar();
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				savePreferences();
-				System.exit(0);
-			}
-		});
-
-		setContentPane(mainPanel);
-		setBounds(p.getMainDialogBounds());
-		setBounds(12, 12, 270, 160);
-		setVisible(true);
-		setLocationRelativeTo(null);
-	}
-
-	private void addExternal(JPanel panel, GridBagConstraints constraints,
-			int x, int y, JComponent c, int fill, int anchor) {
-		constraints.gridx = x;
-		constraints.gridy = y;
-		constraints.fill = fill;
-		constraints.anchor = anchor;
-		panel.add(c, constraints);
-	}
-
-	private void disconnect() {
-		netLoginConnection.logout();
-		statusLabel.setText("Not Connected");
-		planLabel.setText("");
-		usageLabel.setText("");
-		connectButton.setText("Connect...");
-		connected = false;
-		loginMenuItem.setEnabled(true);
-		changePWMenuItem.setEnabled(false);
-	}
-
-	private void savePreferences() {
-		p.setMainDialogBounds(getBounds());
-		p.setLoginDialogBounds(loginDialog.getBounds());
-		p.savePreferences();
-	}
-
-	public void update(int balance, boolean onPeak, boolean connected,
-			String message) {
-	    /*block function of display instant message */
-		/*	if (message.length() > 0) {
-			JOptionPane.showMessageDialog(this, message, "You have a message",
-					JOptionPane.INFORMATION_MESSAGE);
+		// no command line startup
+		if (args.length==0) new NetLoginGUI();
+		// command line startup
+		else {
+			OptionParser parser = new OptionParser() {
+	            {
+	                accepts( "u" ).withRequiredArg().ofType( String.class ).describedAs( "upi" );
+	                accepts( "p" ).withOptionalArg().ofType( String.class ).describedAs( "password" );
+	                acceptsAll( asList( "g", "GUI", "gui" ), "command line for upi and password input, but still display GUI interface" );
+	                acceptsAll( asList( "h", "?" ), "show help" );
+	            }
+	        };
+	        try{
+	        	OptionSet options = parser.parse( args );
+	        	// HELP print
+	        	if ( options.has( "?" ) )
+	        	{
+	        		parser.printHelpOn( System.out );
+	        		System.exit(0);
+	        	}
+	        
+	        	// CMD Line with upi and password
+	        	if (options.has("u") )
+	        	{
+	        		String password = null;
+	        		String upi= options.valueOf("u").toString();
+	        		
+	        		if (upi==null || upi.length()==0)
+	        		{
+	        			System.out.println("Please type your upi with option -u");
+	        			System.exit(0);
+	        		}
+	        		
+	        		if (options.has("p")) password= options.valueOf("p").toString();
+	        		
+	        		if (password==null || password.length()==0)
+	        		{
+	        			try {
+	        				password = new String(ConsolePasswordField.getPassword(System.in, "Enter password: "));
+	        			} catch(IOException ioe) {
+	        	         ioe.printStackTrace();
+	        			}
+	        	    }
+	        	    if(password == null ) 
+	        	    {
+	        	         System.out.println("No password entered");
+	        	         System.exit(0);
+	        	    }
+	        	    
+	        	    // still use GUI interface
+	        	    if (options.has("g") )
+	        	    	new NetLoginGUI(upi,password);
+	        	    else //pure command line with console        	    
+	        	    	new NetLoginCMD(upi,password);
+	        	}
+	        	
+	        }catch(Exception e)
+	        {
+	        	System.out.println(e.getMessage());
+	        	parser.printHelpOn( System.out );
+	        	System.exit(0);
+	        }
+	        
 		}
-		*/
-		update(balance, onPeak, connected);
-	}
-
-	public void update(int balance, boolean onPeak, boolean connected) {
-		if (connected) {
-			this.connected = true;
-			planLabel.setText("IPQuota: $" + balance / 100.0);
-			if (onPeak)
-				planLabel.setText(planLabel.getText() + " (Peak)");
-			else
-				planLabel.setText(planLabel.getText() + " (Off Peak)");
-			statusLabel.setText(loginTF.getText());
-			connectButton.setToolTipText("Disconnect from NetAccount");
-			connectButton.setText("Disconnect");
-			changePWMenuItem.setEnabled(true);
-			loginMenuItem.setEnabled(false);
-		} else {
-			disconnect(); // to make sure
-		}
-	}
-
-	/* new update menthod for client version >=3 netlogin */
-	public void updateV3(int ip_usage, int user_plan_flags, boolean connected,
-			String message) {
-		String plan_name = "";
-		if (connected) {
-			this.connected = true;
-			float MBs_usage = (float) (Math.round((ip_usage / 1024.0) * 100)) / 100;
-			usageLabel.setText("" + MBs_usage + "MBs");
-
-			user_plan_flags = user_plan_flags & 0x0F000000;
-			switch (user_plan_flags) {
-			case 0x01000000: // STATUS_UNLIMITED:
-				plan_name = "Unlimited";
-				break;
-			case 0x02000000: // STATUS_SPONSORED:
-				plan_name = "Sponsored";
-				break;
-			case 0x03000000: // STATUS_PREMIUM:
-				plan_name = "Premium";
-				break;
-			case 0x04000000: // STATUS_STANDARD:
-				plan_name = "Standard";
-				break;
-			case 0x05000000: // STATUS_NOACCESS:
-				plan_name = "No Access";
-				break;
-			default:
-				plan_name = "";
-			}
-			planLabel.setText(plan_name);
-			statusLabel.setText(loginTF.getText());
-			connectButton.setToolTipText("Disconnect from NetAccount");
-			connectButton.setText("Disconnect");
-			changePWMenuItem.setEnabled(true);
-			loginMenuItem.setEnabled(false);
-		} else {
-			disconnect(); // to make sure
-		}
-	}
-
-	public void showAbout() {
-		JOptionPane.showMessageDialog(this, "JNetLogin Client Version 3.0.1\n"
-				+ "Copyright(C) 2001-2009 The University of Auckland.\n"
-				+ "Release under terms of the GNU GPL. \n");
-	}
-/* change to web-based URL for passwd change*/
-	/*
-	private void changePassword() {
-		final JDialog passwordChangeDialog = new JDialog();
-		final JTextField oldPasswordTF = new JPasswordField();
-		final JTextField newPasswordTF = new JPasswordField();
-		final JTextField newPasswordTF2 = new JPasswordField();
-		JPanel panel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-		panel.setLayout(gbl);
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.insets = new Insets(1, 1, 1, 1);
-
-		final JButton button = new JButton("Change");
-		button.setFont(globalFont);
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				PasswordChanger pwc = new PasswordChanger();
-				pwc.changePassword(loginTF.getText(), oldPasswordTF.getText(),
-						newPasswordTF.getText());
-				passwordChangeDialog.dispose();
-				JOptionPane.showMessageDialog(NetLogin.this, pwc.errorString);
-			}
-		});
-		button.setEnabled(false);
-
-		oldPasswordTF.addCaretListener(new CaretListener() {
-			public void caretUpdate(CaretEvent e) {
-				if (!oldPasswordTF.getText().equals("")
-						&& !newPasswordTF.getText().equals(""))
-					button.setEnabled(true);
-				else
-					button.setEnabled(false);
-			}
-		});
-		newPasswordTF.addCaretListener(new CaretListener() {
-			public void caretUpdate(CaretEvent e) {
-				if (!oldPasswordTF.getText().equals("")
-						&& !newPasswordTF.getText().equals(""))
-					button.setEnabled(true);
-				else
-					button.setEnabled(false);
-			}
-		});
-
-		JLabel label = new JLabel("Old Password:");
-		label.setFont(globalFont);
-		addExternal(panel, gbc, 0, 0, label, GridBagConstraints.VERTICAL,
-				GridBagConstraints.EAST);
-		gbc.weightx = 7.0;
-		addExternal(panel, gbc, 1, 0, oldPasswordTF, GridBagConstraints.BOTH,
-				GridBagConstraints.WEST);
-		gbc.weightx = 1.0;
-		label = new JLabel("New Password:");
-		label.setFont(globalFont);
-		addExternal(panel, gbc, 0, 1, label, GridBagConstraints.VERTICAL,
-				GridBagConstraints.EAST);
-		addExternal(panel, gbc, 1, 1, newPasswordTF, GridBagConstraints.BOTH,
-				GridBagConstraints.WEST);
-		label = new JLabel("Confirm:");
-		label.setFont(globalFont);
-		addExternal(panel, gbc, 0, 2, label, GridBagConstraints.VERTICAL,
-				GridBagConstraints.EAST);
-		addExternal(panel, gbc, 1, 2, newPasswordTF2, GridBagConstraints.BOTH,
-				GridBagConstraints.WEST);
-		addExternal(panel, gbc, 1, 3, button, GridBagConstraints.NONE,
-				GridBagConstraints.CENTER);
-		button.setSelected(true);
-		passwordChangeDialog.setContentPane(panel);
-		passwordChangeDialog.setTitle("Change Password");
-		passwordChangeDialog.setVisible(true);
-		passwordChangeDialog.setBounds(p.getLoginDialogBounds());
-	}
-	*/
-
-	private void makeLoginDialog() {
-		loginDialog = new JDialog();
-		JPanel panel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-		panel.setLayout(gbl);
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.insets = new Insets(1, 1, 1, 1);
-
-		final JButton button = new JButton("Login");
-		button.setFont(globalFont);
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
-				try {
-					if (p.getUseAltServer())
-						netLoginConnection.login(p.getAltServer(), loginTF.getText(), passwordTF.getText());
-					else
-						netLoginConnection.login(loginTF.getText(), passwordTF.getText());
-					loginDialog.setVisible(false);
-				} catch (IOException ex) {
-					showError(ex.getMessage());
-				}
-				((JButton) e.getSource()).setEnabled(false);
-				passwordTF.setText("");
-			}
-		});
-		button.setEnabled(false);
-
-		passwordTF.addCaretListener(new CaretListener() {
-			public void caretUpdate(CaretEvent e) {
-				if (!passwordTF.getText().equals("")
-						&& !loginTF.getText().equals(""))
-					button.setEnabled(true);
-				else
-					button.setEnabled(false);
-			}
-		});
-		loginTF.addCaretListener(new CaretListener() {
-			public void caretUpdate(CaretEvent e) {
-				if (!passwordTF.getText().equals("")
-						&& !loginTF.getText().equals(""))
-					button.setEnabled(true);
-				else
-					button.setEnabled(false);
-			}
-		});
-		passwordTF.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				netLoginConnection.setUseStaticPingPort(p
-						.getUseStaticPingPort());
-				try {
-					if (p.getUseAltServer())
-						netLoginConnection.login(p.getAltServer(), loginTF
-								.getText(), passwordTF.getText());
-					else
-						netLoginConnection.login(loginTF.getText(), passwordTF
-								.getText());
-					loginDialog.setVisible(false);
-				} catch (IOException ex) {
-					showError(ex.getMessage());
-				}
-				button.setEnabled(false);
-				passwordTF.setText("");
-			}
-		});
-		JLabel label = new JLabel("NetID:");
-		label.setFont(globalFont);
-		addExternal(panel, gbc, 0, 0, label, GridBagConstraints.VERTICAL,GridBagConstraints.EAST);
-		gbc.weightx = 7.0;
-		addExternal(panel, gbc, 1, 0, loginTF, GridBagConstraints.BOTH,GridBagConstraints.WEST);
-		gbc.weightx = 1.0;
-		label = new JLabel("NetPassword:");
-		label.setFont(new Font("Dialog", Font.PLAIN, 12));
-		addExternal(panel, gbc, 0, 1, label, GridBagConstraints.VERTICAL,GridBagConstraints.EAST);
-		addExternal(panel, gbc, 1, 1, passwordTF, GridBagConstraints.BOTH,GridBagConstraints.WEST);
-		addExternal(panel, gbc, 1, 2, button, GridBagConstraints.NONE,				GridBagConstraints.CENTER);
-		button.setSelected(true);
-		loginDialog.setContentPane(panel);
-		loginDialog.setTitle("Login");
-		//loginDialog.setVisible(true);
-		loginDialog.setVisible(false);
-		loginDialog.setBounds(p.getLoginDialogBounds());
-		loginDialog.setLocationRelativeTo(null);
-	}
-
-	private void showError(String errorMsg) {
-		JOptionPane.showMessageDialog(this, "JNetLogin - " + errorMsg);
-		disconnect();
-	}
-
-	private void makeMenuBar() {
-		JMenu netLoginMenu = new JMenu("NetLogin");
-		JMenu helpMenu = new JMenu("Help");
-		JMenuItem menuItem = new JMenuItem("Login");
-
-		netLoginMenu.setFont(globalFont);
-		helpMenu.setFont(globalFont);
-		menuItem.setFont(globalFont);
-
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				loginDialog.setVisible(true);
-				loginDialog.setBounds(p.getLoginDialogBounds());
-				loginDialog.setLocationRelativeTo(null);
-			}
-		});
-		netLoginMenu.add(menuItem);
-		loginMenuItem = menuItem;
-
-		menuItem = new JMenuItem("Preferences");
-		menuItem.setFont(globalFont);
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				p.showPreferencesDialog();
-			}
-		});
-		netLoginMenu.add(menuItem);
-		menuItem = new JMenuItem("Change Password");
-		menuItem.setFont(globalFont);
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				//changePassword();
-				/* open web-based change password*/
-				openURL(passwdChangeURL);
-			}
-		});
-		menuItem.setEnabled(false);
-		changePWMenuItem = menuItem;
-		netLoginMenu.add(menuItem);
-		netLoginMenu.addSeparator();
-
-		menuItem = new JMenuItem("Quit");
-		menuItem.setFont(globalFont);
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				savePreferences();
-				System.exit(0);
-			}
-		});
-		netLoginMenu.add(menuItem);
-
-		menuItem = new JMenuItem("About");
-		menuItem.setFont(globalFont);
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				showAbout();
-			}
-		});
-		helpMenu.add(menuItem);
-
-		menuItem = new JMenuItem("Show Charge Rates...");
-		menuItem.setFont(globalFont);
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				openURL(helpURL);
-			}
-		});
-		helpMenu.add(menuItem);
-
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(netLoginMenu);
-		menuBar.add(helpMenu);
-		setJMenuBar(menuBar);
-	}
-
-	public static void openURL(String url) {
-		String osName = System.getProperty("os.name");
-		try {
-			if (osName.startsWith("Mac")) {// Mac OS
-				Class fileMgr = Class.forName("com.apple.eio.FileManager");
-				Method openURL = fileMgr.getDeclaredMethod("openURL",
-						new Class[] { String.class });
-				openURL.invoke(null, new Object[] { url });
-			} else if (osName.startsWith("Windows")) {// Windows
-				Runtime.getRuntime().exec(
-						"rundll32 url.dll,FileProtocolHandler " + url);
-			} else { // Unix or Linux
-				String[] browsers = { "firefox", "opera", "konqueror",
-						"epiphany", "mozilla", "netscape" };
-				String browser = null;
-				for (int count = 0; count < browsers.length && browser == null; count++) {
-					if (Runtime.getRuntime().exec(
-							new String[] { "which", browsers[count] })
-							.waitFor() == 0) {
-						browser = browsers[count];
-					}
-				}
-				if (browser == null) {
-					throw new Exception("Could not find web browser");
-				} else {
-					Runtime.getRuntime().exec(new String[] { browser, url });
-				}
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public static void main(String[] args) {
-		new NetLogin();
-		System.out.println("Done");
 	}
 }

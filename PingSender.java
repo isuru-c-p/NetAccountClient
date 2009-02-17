@@ -15,19 +15,35 @@ public class PingSender extends Thread {
 	private int Sequence_Number = 0;
 	private volatile boolean stop = false;
 	private volatile int outstandingPings = 0;
-	private NetLogin netLogin;
+	private NetLoginGUI netLogingui=null;
+	private NetLoginCMD netLogincmd=null;
 
-	public PingSender( String The_Host, int The_Port, NetLogin netLogin ) throws IOException {
+	public PingSender( String The_Host, int The_Port, NetLoginGUI netLogin ) throws IOException {
 		try {
 			s = new DatagramSocket(); 	// Allocate a datgram socket
 		}
 		catch ( Exception e ) {
 			throw new IOException( "Error creating DatagramSocket: " + e );
 		}
-		this.netLogin = netLogin;
 		Host = The_Host;
 		Port = The_Port;
 		Host_IPAddr = InetAddress.getByName( Host );
+		this.netLogingui = netLogin;
+		this.netLogincmd = null;
+	}
+	
+	public PingSender( String The_Host, int The_Port, NetLoginCMD netLogin ) throws IOException {
+		try {
+			s = new DatagramSocket(); 	// Allocate a datgram socket
+		}
+		catch ( Exception e ) {
+			throw new IOException( "Error creating DatagramSocket: " + e );
+		}
+		Host = The_Host;
+		Port = The_Port;
+		Host_IPAddr = InetAddress.getByName( Host );
+		this.netLogincmd = netLogin;
+		this.netLogingui = null;
 	}
 
 	public void prepare( Key_schedule schedule, int Auth_Ref,
@@ -80,7 +96,7 @@ public class PingSender extends Thread {
 		DatagramPacket sendPacket = null;
 		desDataOutputStream packit = new desDataOutputStream( 8192 );
 		byte messageBytes[];
-		int bad = 0;
+	
 
 		try {
 			packit.writeInt( -1 );					// -1 tells Pingd this is a message
@@ -120,7 +136,7 @@ public class PingSender extends Thread {
 				Sequence_Number++;
 				outstandingPings++;
 				bad = 0;
-
+	
 			} catch ( IOException e ) {
 				System.out.println( "PingSender: Error sending ping packet" );
 				bad++; 		// Ignore it at least 10 times in a row
@@ -138,12 +154,15 @@ public class PingSender extends Thread {
 			} catch ( InterruptedException e ) {
 				// stopPinging wants us to stop.
 			}
-		}
+			
+		} //end of while
+		
 		try {
 			s.close();
 		} catch ( Exception e ) {
 			System.err.println( "Error closing socket: " + e );
 		}
-		netLogin.update( 0, false, false );
+		if (netLogingui!=null) netLogingui.update( 0, false, false );
+		if (netLogincmd!=null) netLogincmd.update( 0, false, false );
 	}
 }
