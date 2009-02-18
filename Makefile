@@ -11,9 +11,9 @@ all: NetLogin.jar
 
 NetLogin.jar: $(SOURCE)
 	javac -g:none $(SOURCE)
-	jar cf NetLogin.jar *.class nz joptsimple
+	jar cf JNetLogin.jar *.class nz joptsimple
 	rm *.class
-	echo -e "\nUsage: java -cp NetLogin.jar NetLogin\n"
+	echo -e "\nUsage: java -cp JNetLogin.jar NetLogin\n"
 
 clean:
-	rm NetLogin.jar
+	rm JNetLogin.jar
