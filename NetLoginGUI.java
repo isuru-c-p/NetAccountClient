@@ -124,6 +124,7 @@ public class NetLoginGUI extends JFrame {
 		setBounds(12, 12, 270, 160);
 		setVisible(true);
 		setLocationRelativeTo(null);
+		
 	}
 
 	private void addExternal(JPanel panel, GridBagConstraints constraints,

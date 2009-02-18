@@ -63,7 +63,8 @@ public class NetLoginCMD {
 					System.out.print("..");
 				else
 				{
-					System.out.println("Upi:"+this.upi+" Status:Connected");
+					System.out.println("Status:Connected");
+					System.out.println("Upi:"+this.upi);
 					System.out.println("Internet Plan:"+plan_name+"\nMBs used this month:"+MBs_usage+"MBs");
 					System.out.print("Pingd is active:.");
 					this.displayStatus=true;
