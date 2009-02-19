@@ -51,7 +51,6 @@ public class NetLoginGUI extends JFrame {
 		}
        statusLabel.setText(upi);
        loginTF.setText(upi);
-      
    }
 	
 	public void NetLoginGUIBody() {
@@ -116,14 +115,29 @@ public class NetLoginGUI extends JFrame {
 			public void windowClosing(WindowEvent e) {
 				savePreferences();
 				System.exit(0);
-			}
-		});
+			};
+		   public void windowIconified(WindowEvent e) {
+			   if (SystemTray.isSupported()) {
+					minimizeToTray(); 
+				} 
+		    };
+		   public void windowOpened(WindowEvent e) {
+			    pack();
+			    setVisible(true);
+		    }
+		   public void windowDeiconified(WindowEvent e) {
+			   pack();
+			   setVisible(true);
+		    }
 
+		});
+	
 		setContentPane(mainPanel);
 		setBounds(p.getMainDialogBounds());
 		setBounds(12, 12, 270, 160);
 		setVisible(true);
 		setLocationRelativeTo(null);
+		
 		
 	}
 
@@ -396,8 +410,7 @@ public class NetLoginGUI extends JFrame {
 		try {
 			if (osName.startsWith("Mac")) {// Mac OS
 				Class fileMgr = Class.forName("com.apple.eio.FileManager");
-				Method openURL = fileMgr.getDeclaredMethod("openURL",
-						new Class[] { String.class });
+				Method openURL = fileMgr.getDeclaredMethod("openURL",new Class[] { String.class });
 				openURL.invoke(null, new Object[] { url });
 			} else if (osName.startsWith("Windows")) {// Windows
 				Runtime.getRuntime().exec(
@@ -423,5 +436,59 @@ public class NetLoginGUI extends JFrame {
 			ex.printStackTrace();
 		}
 	}
+	
+	public void minimizeToTray(){
+
+		setVisible(false); 
+		final TrayIcon trayIcon;
+        SystemTray tray = SystemTray.getSystemTray();
+        Image image = Toolkit.getDefaultToolkit().getImage("jnetlogin.gif");
+            MouseListener mouseListener = new MouseListener() {
+                public void mouseClicked(MouseEvent e) {
+                    System.out.println("Tray Icon - Mouse clicked!");  
+                    pack();
+                    setVisible(true);
+                }
+                public void mouseEntered(MouseEvent e) {
+                    System.out.println("Tray Icon - Mouse entered!");                 
+                }
+                public void mouseExited(MouseEvent e) {
+                    System.out.println("Tray Icon - Mouse exited!");                 
+                }
+                public void mousePressed(MouseEvent e) {
+                    System.out.println("Tray Icon - Mouse pressed!");                 
+                }
+                public void mouseReleased(MouseEvent e) {
+                    System.out.println("Tray Icon - Mouse released!");                 
+                }
+            };
+            ActionListener exitListener = new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println("Exiting...");
+                    System.exit(0);
+                }
+            };
+            PopupMenu popup = new PopupMenu();
+            MenuItem defaultItem = new MenuItem("Exit");
+            defaultItem.addActionListener(exitListener);
+            popup.add(defaultItem);
+            trayIcon = new TrayIcon(image, "Tray Demo", popup);
+            ActionListener actionListener = new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    trayIcon.displayMessage("Action Event", 
+                        "An Action Event Has Been Peformed!",
+                        TrayIcon.MessageType.INFO);
+                }
+            };
+            trayIcon.setImageAutoSize(true);
+            trayIcon.addActionListener(actionListener);
+            trayIcon.addMouseListener(mouseListener);
+            try {
+                      tray.add(trayIcon);
+               } catch (AWTException e) {
+                   System.err.println("TrayIcon could not be added.");
+               }
+         } 
+	
 
 }
