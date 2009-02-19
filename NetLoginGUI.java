@@ -31,6 +31,7 @@ public class NetLoginGUI extends JFrame {
 	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
 
 	private TrayIcon trayIcon;
+	private String plan_name = "";
 
 	public NetLoginGUI() {
 		// super("JNetLogin");
@@ -113,26 +114,15 @@ public class NetLoginGUI extends JFrame {
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				savePreferences();
-				System.exit(0);
-			};
-
-			public void windowIconified(WindowEvent e) {
 				if (SystemTray.isSupported()) {
+					setVisible(false);
 					minimizeToTray();
 				}
-			};
-
-			public void windowOpened(WindowEvent e) {
-				pack();
-				setVisible(true);
+				else{
+					savePreferences();
+					System.exit(0);
+				}
 			}
-
-			public void windowDeiconified(WindowEvent e) {
-				pack();
-				setVisible(true);
-			}
-
 		});
 
 		setContentPane(mainPanel);
@@ -199,7 +189,7 @@ public class NetLoginGUI extends JFrame {
 	/* new update menthod for client version >=3 netlogin */
 	public void updateV3(int ip_usage, int user_plan_flags, boolean connected,
 			String message) {
-		String plan_name = "";
+		
 		if (connected) {
 			this.connected = true;
 			float MBs_usage = (float) (Math.round((ip_usage / 1024.0) * 100)) / 100;
@@ -451,10 +441,13 @@ public class NetLoginGUI extends JFrame {
 	}
 
 	public void minimizeToTray() {
+		String label="Status:Discounnted";
+		if (connected) label="Status:Connected"+" InternetPlan:"+plan_name;
 		SystemTray tray = SystemTray.getSystemTray(); 
 		try{
 	     tray.add(trayIcon); 
-		}catch(Exception e)
+	     trayIcon.setToolTip(label);
+	   }catch(Exception e)
 		{
 			System.out.println("add trayIcon error"+e);
 		}
@@ -464,17 +457,59 @@ public class NetLoginGUI extends JFrame {
 		Image image = Toolkit.getDefaultToolkit().getImage(
 				this.getClass().getResource("jnetlogin.gif"));
 		PopupMenu popup = new PopupMenu();
-		MenuItem exitItem = new MenuItem("Show");
+		
+		MenuItem helpItem = new MenuItem("Help");
+		ActionListener helpListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openURL(helpURL);
+			}
+		};
+		helpItem.addActionListener(helpListener);
+		
+		MenuItem rateItem = new MenuItem("Show Charge Rates");
+		ActionListener rateListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openURL(helpURL);
+			}
+		};
+		rateItem.addActionListener(rateListener);
+		
+		MenuItem passwordItem = new MenuItem("Change Password");
+		ActionListener passwordListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openURL(passwdChangeURL);
+			}
+		};
+		passwordItem.addActionListener(passwordListener);
+		
+		
+		MenuItem openItem = new MenuItem("Open JNetLogin");
 		ActionListener showListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(true);
 				SystemTray.getSystemTray().remove(trayIcon);
 			}
 		};
-		exitItem.addActionListener(showListener);
+		openItem.addActionListener(showListener);
+	
+		MenuItem exitItem = new MenuItem("Exit");
+		ActionListener exitListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		};
+		exitItem.addActionListener(exitListener);
+		
+		popup.add(helpItem);
+		popup.addSeparator();
+		popup.add(rateItem);
+		popup.add(passwordItem);
+		popup.addSeparator();
+		popup.add(openItem);
 		popup.add(exitItem);
-		trayIcon = new TrayIcon(image, "MyTray", popup);
-		trayIcon.addActionListener(showListener);
+		
+		trayIcon = new TrayIcon(image, "MyIcon", popup);
+		//trayIcon.addActionListener(showListener);
 	}
 
 }
