@@ -114,15 +114,15 @@ public class NetLoginGUI extends JFrame {
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
+					savePreferences();
+					System.exit(0);
+			}
+			public void windowIconified(WindowEvent e) {
 				if (SystemTray.isSupported()) {
 					setVisible(false);
 					minimizeToTray();
 				}
-				else{
-					savePreferences();
-					System.exit(0);
-				}
-			}
+	        }
 		});
 
 		setContentPane(mainPanel);
@@ -306,10 +306,10 @@ public class NetLoginGUI extends JFrame {
 		label.setFont(globalFont);
 		addExternal(panel, gbc, 0, 0, label, GridBagConstraints.VERTICAL,
 				GridBagConstraints.EAST);
-		gbc.weightx = 7.0;
+		gbc.weightx = 5.0;
 		addExternal(panel, gbc, 1, 0, loginTF, GridBagConstraints.BOTH,
 				GridBagConstraints.WEST);
-		gbc.weightx = 1.0;
+		gbc.weightx = 5.0;
 		label = new JLabel("Password:");
 		label.setFont(new Font("Dialog", Font.PLAIN, 12));
 		addExternal(panel, gbc, 0, 1, label, GridBagConstraints.VERTICAL,
@@ -325,6 +325,7 @@ public class NetLoginGUI extends JFrame {
 		loginDialog.setVisible(false);
 		loginDialog.setBounds(p.getLoginDialogBounds());
 		loginDialog.setLocationRelativeTo(null);
+		loginDialog.pack();
 	}
 
 	private void showError(String errorMsg) {
@@ -486,8 +487,10 @@ public class NetLoginGUI extends JFrame {
 		MenuItem openItem = new MenuItem("Open JNetLogin");
 		ActionListener showListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setVisible(true);
 				SystemTray.getSystemTray().remove(trayIcon);
+				setState(Frame.NORMAL); 
+				setVisible(true);
+				toFront();
 			}
 		};
 		openItem.addActionListener(showListener);
@@ -509,6 +512,7 @@ public class NetLoginGUI extends JFrame {
 		popup.add(exitItem);
 		
 		trayIcon = new TrayIcon(image, "MyIcon", popup);
+		trayIcon.setImageAutoSize(true);
 		//trayIcon.addActionListener(showListener);
 	}
 
