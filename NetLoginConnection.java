@@ -9,8 +9,7 @@ import nz.ac.auckland.cs.des.*;
 
 public class NetLoginConnection {
 	
-	//final String AUTHD_SERVER	= "jason2.netac.auckland.ac.nz";
-	final String AUTHD_SERVER	= "gate-dev.ec.auckland.ac.nz";
+	final String AUTHD_SERVER	= "gate.ec.auckland.ac.nz";
 	
 	final int AUTHD_PORT		= 312	; 	// The port that we are awaiting authd from.
 	final int PINGD_PORT		= 443	; 	// The port that we are awaiting pings from.
