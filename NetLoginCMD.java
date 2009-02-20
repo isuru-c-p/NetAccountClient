@@ -25,7 +25,7 @@ public class NetLoginCMD {
 		
 		public void update(int balance, boolean onPeak, boolean connected) {
 			if (connected) {
-				System.out.println("Upi:"+this.upi+" Status:Connected");
+				System.out.println("UPI:"+this.upi+" Status:Connected");
 			} else {
 				//disconnect(); // to make sure
 				System.out.println("Disconnected");
@@ -64,7 +64,7 @@ public class NetLoginCMD {
 				else
 				{
 					System.out.println("Status:Connected");
-					System.out.println("Upi:"+this.upi);
+					System.out.println("UPI:"+this.upi);
 					System.out.println("Internet Plan:"+plan_name+"\nMBs used this month:"+MBs_usage+"MBs");
 					System.out.print("Pingd is active:.");
 					this.displayStatus=true;

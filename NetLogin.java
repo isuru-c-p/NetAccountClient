@@ -47,7 +47,11 @@ public class NetLogin {
 	        			System.exit(0);
 	        		}
 	        		
-	        		if (options.has("p")) password= options.valueOf("p").toString();
+	        		if (options.has("p")) 
+	        		try{
+	        			password= options.valueOf("p").toString();
+	        		}catch(Exception e)	{password=null;}
+	        		
 	        		
 	        		if (password==null || password.length()==0)
 	        		{
