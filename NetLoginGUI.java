@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.io.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import java.lang.reflect.Method;
@@ -131,7 +132,7 @@ public class NetLoginGUI extends JFrame {
 		setVisible(true);
 		setLocationRelativeTo(null);
 		//pack();
-		
+		setIconImage(new ImageIcon("jnetlogin.gif").getImage());
 		// init tray Icon()
 		initTrayIcon(); 
 
@@ -459,6 +460,26 @@ public class NetLoginGUI extends JFrame {
 				this.getClass().getResource("jnetlogin.gif"));
 		PopupMenu popup = new PopupMenu();
 		
+		 MouseListener mouseListener = new MouseListener() {
+			public void mouseClicked(MouseEvent e) {
+				SystemTray.getSystemTray().remove(trayIcon);
+				setState(Frame.NORMAL); 
+				setVisible(true);
+				toFront();               
+             }
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			public void mouseExited(MouseEvent e) {
+			}
+
+			public void mousePressed(MouseEvent e) {
+			}
+
+			public void mouseReleased(MouseEvent e) {
+			}
+         };
+		
 		MenuItem helpItem = new MenuItem("Help");
 		ActionListener helpListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -513,7 +534,7 @@ public class NetLoginGUI extends JFrame {
 		
 		trayIcon = new TrayIcon(image, "MyIcon", popup);
 		trayIcon.setImageAutoSize(true);
-		//trayIcon.addActionListener(showListener);
+		trayIcon.addMouseListener(mouseListener);
 	}
 
 }
