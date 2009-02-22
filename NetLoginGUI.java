@@ -327,6 +327,7 @@ public class NetLoginGUI extends JFrame {
 		loginDialog.setBounds(p.getLoginDialogBounds());
 		loginDialog.setLocationRelativeTo(null);
 		loginDialog.pack();
+		loginDialog.setIconImage(new ImageIcon("jnetlogin.gif").getImage());
 	}
 
 	private void showError(String errorMsg) {
