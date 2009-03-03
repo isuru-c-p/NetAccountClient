@@ -131,6 +131,7 @@ public class NetLoginGUI extends JFrame {
 		setBounds(12, 12, 270, 160);
 		setVisible(true);
 		setLocationRelativeTo(null);
+		setResizable(false);
 		//pack();
 		setIconImage(new ImageIcon("jnetlogin.gif").getImage());
 		// init tray Icon()
@@ -326,7 +327,7 @@ public class NetLoginGUI extends JFrame {
 		loginDialog.setVisible(false);
 		loginDialog.setBounds(p.getLoginDialogBounds());
 		loginDialog.setLocationRelativeTo(null);
-		loginDialog.pack();
+		loginDialog.setResizable(false);
 		loginDialog.setIconImage(new ImageIcon("jnetlogin.gif").getImage());
 	}
 
