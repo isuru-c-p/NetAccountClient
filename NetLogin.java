@@ -1,4 +1,7 @@
 import java.io.*;
+
+import javax.swing.UIManager;
+
 import static java.util.Arrays.*;
 
 import joptsimple.OptionParser;
@@ -10,9 +13,16 @@ import joptsimple.OptionSet;
  * This class is GUI for NetLoginConnection.
  * NB: GUI code is always pretty ugly.
  */
-public class NetLogin {
+public class NetLogin{
 	
 	public static void main(String[] args) throws Exception {
+        
+		try {
+            UIManager.setLookAndFeel(
+                    "com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            // handle exception
+        } 
 		
 		// no command line startup
 		if (args.length==0) new NetLoginGUI();

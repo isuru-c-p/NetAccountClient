@@ -27,12 +27,13 @@ public class NetLoginGUI extends JFrame {
 	private final Font globalFont = new Font("Dialog", Font.PLAIN, 12);
 	private final Font globalTitleFont = new Font("Dialog", Font.BOLD, 12);
 	private final Color globalTitleColor = new Color(51, 102, 255);
-
-	static String helpURL = "http://ec.auckland.ac.nz/net.htm";
-	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
-
 	private TrayIcon trayIcon;
 	private String plan_name = "";
+	
+	static String helpURL = "http://ec.auckland.ac.nz/net.htm";
+	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
+	static String icon_imagename="jnetlogin16x16.gif";
+	
 
 	public NetLoginGUI() {
 		// super("JNetLogin");
@@ -133,7 +134,7 @@ public class NetLoginGUI extends JFrame {
 		setLocationRelativeTo(null);
 		setResizable(false);
 		//pack();
-		setIconImage(new ImageIcon("jnetlogin.gif").getImage());
+		setIconImage(new ImageIcon(icon_imagename).getImage());
 		// init tray Icon()
 		initTrayIcon(); 
 
@@ -328,7 +329,7 @@ public class NetLoginGUI extends JFrame {
 		loginDialog.setBounds(p.getLoginDialogBounds());
 		loginDialog.setLocationRelativeTo(null);
 		loginDialog.setResizable(false);
-		loginDialog.setIconImage(new ImageIcon("jnetlogin.gif").getImage());
+		loginDialog.setIconImage(new ImageIcon(icon_imagename).getImage());
 	}
 
 	private void showError(String errorMsg) {
@@ -459,7 +460,7 @@ public class NetLoginGUI extends JFrame {
 
 	private void initTrayIcon() {
 		Image image = Toolkit.getDefaultToolkit().getImage(
-				this.getClass().getResource("jnetlogin.gif"));
+				this.getClass().getResource(icon_imagename));
 		PopupMenu popup = new PopupMenu();
 		
 		 MouseListener mouseListener = new MouseListener() {
