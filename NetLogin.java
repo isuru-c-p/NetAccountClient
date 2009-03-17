@@ -17,15 +17,16 @@ public class NetLogin{
 	
 	public static void main(String[] args) throws Exception {
         
+		//setup nimbus look and feel
 		try {
-            UIManager.setLookAndFeel(
-                    "com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
             // handle exception
         } 
 		
 		// no command line startup
-		if (args.length==0) new NetLoginGUI();
+		if (args.length==0)
+			new NetLoginGUI();
 		// command line startup
 		else {
 			OptionParser parser = new OptionParser() {

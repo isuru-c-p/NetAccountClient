@@ -30,9 +30,13 @@ public class NetLoginGUI extends JFrame {
 	private TrayIcon trayIcon;
 	private String plan_name = "";
 	
+	static String versionNumber="3.0.2";
 	static String helpURL = "http://ec.auckland.ac.nz/net.htm";
 	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
 	static String icon_imagename="jnetlogin16x16.gif";
+	static String aboutInfo = "JNetLogin Client Version "+versionNumber
+		+ "\nCopyright(C) 2001-2009 The University of Auckland.\n"
+		+ "Release under terms of the GNU GPL. \n";
 	
 
 	public NetLoginGUI() {
@@ -230,9 +234,7 @@ public class NetLoginGUI extends JFrame {
 	}
 
 	public void showAbout() {
-		JOptionPane.showMessageDialog(this, "JNetLogin Client Version 3.0.1\n"
-				+ "Copyright(C) 2001-2009 The University of Auckland.\n"
-				+ "Release under terms of the GNU GPL. \n");
+		JOptionPane.showMessageDialog(this,aboutInfo);
 	}
 
 	private void makeLoginDialog() {
