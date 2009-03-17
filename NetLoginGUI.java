@@ -40,7 +40,7 @@ public class NetLoginGUI extends JFrame {
 	
 
 	public NetLoginGUI() {
-		// super("JNetLogin");
+		super("JNetLogin");
 		NetLoginGUIBody();
 	}
 
