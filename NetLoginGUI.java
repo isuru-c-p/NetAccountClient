@@ -30,12 +30,12 @@ public class NetLoginGUI extends JFrame {
 	private TrayIcon trayIcon;
 	private String plan_name = "";
 	
-	static String versionNumber="3.0.3";
-	static String helpURL = "http://ec.auckland.ac.nz/net.htm";
+	static String versionNumber="3.0.4";
+	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
 	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
 	static String icon_imagename="jnetlogin16x16.gif";
 	static String aboutInfo = "JNetLogin Client Version "+versionNumber
-		+ "\nCopyright(C) 2001-2009 The University of Auckland.\n"
+		+ "\nCopyright(C) 2001-2010 The University of Auckland.\n"
 		+ "Release under terms of the GNU GPL. \n";
 	
 
@@ -204,20 +204,23 @@ public class NetLoginGUI extends JFrame {
 
 			user_plan_flags = user_plan_flags & 0x0F000000;
 			switch (user_plan_flags) {
-			case 0x01000000: // STATUS_UNLIMITED:
-				plan_name = "Unlimited";
+			case 0x01000000: // STATUS_UNLIMITED: =>Staff
+				plan_name = "Staff";
 				break;
 			case 0x02000000: // STATUS_SPONSORED:
 				plan_name = "Sponsored";
 				break;
-			case 0x03000000: // STATUS_PREMIUM:
-				plan_name = "Premium";
+			case 0x03000000: // STATUS_PREMIUM: =>undergraduate
+				plan_name = "Undergraduate";
 				break;
-			case 0x04000000: // STATUS_STANDARD:
-				plan_name = "Standard";
+			case 0x04000000: // STATUS_STANDARD: => exceeded
+				plan_name = "ExceededAllowance";
 				break;
 			case 0x05000000: // STATUS_NOACCESS:
-				plan_name = "No Access";
+				plan_name = "NoAccess";
+				break;
+			case 0x06000000: // STATUS_PostGraduate:
+				plan_name = "Postgraduate";
 				break;
 			default:
 				plan_name = "";
