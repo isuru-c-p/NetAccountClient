@@ -332,6 +332,7 @@ public class NetLoginGUI extends JFrame {
 		// loginDialog.setVisible(true);
 		loginDialog.setVisible(false);
 		loginDialog.setBounds(p.getLoginDialogBounds());
+		loginDialog.setBounds(12, 12, 270, 120);
 		loginDialog.setLocationRelativeTo(null);
 		loginDialog.setResizable(false);
 		loginDialog.setIconImage(new ImageIcon(icon_imagename).getImage());
