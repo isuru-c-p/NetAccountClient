@@ -1,15 +1,20 @@
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 import javax.swing.event.*;
 import java.lang.reflect.Method;
+import java.awt.Window;
 
-public class NetLoginGUI extends JFrame {
+public class NetLoginGUI extends JPanel {
+
+	private Window window;
+    private JFrame windowAsFrame;
+    private JDialog windowAsDialog;
 
 	private static final long serialVersionUID = 1L;
-	private JLabel upititle = new JLabel("UPI:  ");
+	private JLabel upititle = new JLabel("NetID/UPI:  ");
 	private JLabel plantitle = new JLabel("Internet Plan:  ");
 	private JLabel usagetitle = new JLabel("MBs used this month:  ");
 	private JLabel statusLabel = new JLabel("Not Connected");
@@ -27,26 +32,72 @@ public class NetLoginGUI extends JFrame {
 	private final Font globalFont = new Font("Dialog", Font.PLAIN, 12);
 	private final Font globalTitleFont = new Font("Dialog", Font.BOLD, 12);
 	private final Color globalTitleColor = new Color(51, 102, 255);
+    
+	private boolean useSystemTray = true;
 	private TrayIcon trayIcon;
 	private String plan_name = "";
 	
-	static String versionNumber="3.0.4";
+	static String versionNumber = "3.0.4";
 	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
-	static String passwdChangeURL = "https://admin.ec.auckland.ac.nz/Passwd/";
+	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
 	static String icon_imagename="jnetlogin16x16.gif";
-	static String aboutInfo = "JNetLogin Client Version "+versionNumber
-		+ "\nCopyright(C) 2001-2010 The University of Auckland.\n"
-		+ "Release under terms of the GNU GPL. \n";
-	
+	static String aboutInfo = "JNetLogin Client Version "+ versionNumber
+		+ "\nCopyright(C) 2001-2011 The University of Auckland.\n"
+            + "Release under terms of the GNU GPL. \n";
 
-	public NetLoginGUI() {
-		super("JNetLogin");
-		NetLoginGUIBody();
+    private JPanel mainPanel;
+
+    private Image iconDefault;
+    private Image iconConnected;
+    private Image iconConnecting;
+    private Image iconDisconnected;
+
+    public NetLoginGUI() {
+		initBody();
+		createWindow();
+        initTrayIcon();
+		openWindow();
 	}
 
 	// No makeLoginDialog(), directly login
 	public NetLoginGUI(String upi, String password) {
-		NetLoginGUIBody();
+		initBody();
+		createWindow();
+		login(upi, password);
+        initTrayIcon();
+		minimizeWindow();
+	}
+	
+	public void createWindow() {
+		if (isSystemTraySupported()) {
+			windowAsDialog = new JDialog((Frame)null, "NetLogin");
+			windowAsDialog.setContentPane(mainPanel);
+            windowAsDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            windowAsDialog.setResizable(false);
+			window = windowAsDialog;
+		} else {
+			windowAsFrame = new JFrame("NetLogin");
+			windowAsFrame.setContentPane(mainPanel);
+            windowAsFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            windowAsFrame.setResizable(false);
+			window = windowAsFrame;
+		}
+
+		makeMenuBar();
+
+		window.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+					minimizeWindow();
+			}
+		});
+
+		window.setBounds(p.getMainDialogBounds());
+		window.setBounds(12, 12, 270, 160);
+		window.setLocationRelativeTo(null);
+		window.setIconImage(new ImageIcon(icon_imagename).getImage());
+	}
+	
+	public void login(String upi, String password) {
 		netLoginConnection = new NetLoginConnection(this);
 		netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
 		try {
@@ -54,21 +105,40 @@ public class NetLoginGUI extends JFrame {
 			loginDialog.setVisible(false);
 		} catch (IOException ex) {
 			showError(ex.getMessage());
-			// System.exit(0);
 		}
 		statusLabel.setText(upi);
 		loginTF.setText(upi);
 	}
+	
+	public boolean isSystemTraySupported() {
+		return useSystemTray && SystemTray.isSupported();
+	}
+	
+	public void openWindow() {
+		if (!isSystemTraySupported()) windowAsFrame.setExtendedState(Frame.NORMAL);
+		window.setVisible(true);
+		window.toFront();
+	}
+	
+	public void minimizeWindow() {
+		if (isSystemTraySupported()) {
+			window.setVisible(false);
+		} else {
+			windowAsFrame.setExtendedState(Frame.ICONIFIED);
+		}
+	}
 
-	public void NetLoginGUIBody() {
-		// super("JNetLogin");
-		if (netLoginConnection == null)
+	public void initBody() {
+		if (netLoginConnection == null) {
 			netLoginConnection = new NetLoginConnection(this);
+		}
+		
 		makeLoginDialog();
+
+        mainPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
-		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(gbl);
+        mainPanel.setLayout(gbl);
 		gbc.weightx = 1.0;
 		gbc.weighty = 1.0;
 		gbc.anchor = GridBagConstraints.CENTER;
@@ -89,10 +159,11 @@ public class NetLoginGUI extends JFrame {
 		connectButton.setToolTipText("Login to NetAccount");
 		connectButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!connected)
+				if (!connected) {
 					loginDialog.setVisible(true);
-				else
+                } else {
 					disconnect();
+                }
 			}
 		});
 
@@ -113,35 +184,7 @@ public class NetLoginGUI extends JFrame {
 		addExternal(mainPanel, gbc, 1, 3, new JSeparator(),
 				GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
 		addExternal(mainPanel, gbc, 1, 4, connectButton,
-				GridBagConstraints.NONE, GridBagConstraints.CENTER);
-
-		makeMenuBar();
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-					savePreferences();
-					System.exit(0);
-			}
-			public void windowIconified(WindowEvent e) {
-				if (SystemTray.isSupported()) {
-					setVisible(false);
-					minimizeToTray();
-				}
-	        }
-		});
-
-		setContentPane(mainPanel);
-		setBounds(p.getMainDialogBounds());
-		setBounds(12, 12, 270, 160);
-		setVisible(true);
-		setLocationRelativeTo(null);
-		setResizable(false);
-		//pack();
-		setIconImage(new ImageIcon(icon_imagename).getImage());
-		// init tray Icon()
-		initTrayIcon(); 
-
+                GridBagConstraints.NONE, GridBagConstraints.CENTER);
 	}
 
 	private void addExternal(JPanel panel, GridBagConstraints constraints,
@@ -161,17 +204,9 @@ public class NetLoginGUI extends JFrame {
 		connectButton.setText("Connect...");
 		connected = false;
 		loginMenuItem.setEnabled(true);
-		changePWMenuItem.setEnabled(false);
 	}
 
-	private void savePreferences() {
-		p.setMainDialogBounds(getBounds());
-		p.setLoginDialogBounds(loginDialog.getBounds());
-		p.savePreferences();
-	}
-
-	public void update(int balance, boolean onPeak, boolean connected,
-			String message) {
+	public void update(int balance, boolean onPeak, boolean connected, String message) {
 		/* block function of display instant message */
 		/*
 		 * if (message.length() > 0) { JOptionPane.showMessageDialog(this,
@@ -186,11 +221,11 @@ public class NetLoginGUI extends JFrame {
 			statusLabel.setText(loginTF.getText());
 			connectButton.setToolTipText("Disconnect from NetAccount");
 			connectButton.setText("Disconnect");
-			changePWMenuItem.setEnabled(true);
 			loginMenuItem.setEnabled(false);
 		} else {
 			disconnect(); // to make sure
 		}
+		updateTrayLabel();
 	}
 
 	/* new update menthod for client version >=3 netlogin */
@@ -229,7 +264,6 @@ public class NetLoginGUI extends JFrame {
 			statusLabel.setText(loginTF.getText());
 			connectButton.setToolTipText("Disconnect from NetAccount");
 			connectButton.setText("Disconnect");
-			changePWMenuItem.setEnabled(true);
 			loginMenuItem.setEnabled(false);
 		} else {
 			disconnect(); // to make sure
@@ -257,12 +291,11 @@ public class NetLoginGUI extends JFrame {
 				netLoginConnection.setUseStaticPingPort(p
 						.getUseStaticPingPort());
 				try {
-					if (p.getUseAltServer())
-						netLoginConnection.login(p.getAltServer(), loginTF
-								.getText(), passwordTF.getText());
-					else
-						netLoginConnection.login(loginTF.getText(), passwordTF
-								.getText());
+					if (p.getUseAltServer()) {
+						netLoginConnection.login(p.getAltServer(), loginTF.getText(), passwordTF.getText());
+                    } else {
+						netLoginConnection.login(loginTF.getText(), passwordTF.getText());
+                    }
 					loginDialog.setVisible(false);
 				} catch (IOException ex) {
 					showError(ex.getMessage());
@@ -296,12 +329,11 @@ public class NetLoginGUI extends JFrame {
 				netLoginConnection.setUseStaticPingPort(p
 						.getUseStaticPingPort());
 				try {
-					if (p.getUseAltServer())
-						netLoginConnection.login(p.getAltServer(), loginTF
-								.getText(), passwordTF.getText());
-					else
-						netLoginConnection.login(loginTF.getText(), passwordTF
-								.getText());
+					if (p.getUseAltServer()) {
+						netLoginConnection.login(p.getAltServer(), loginTF.getText(), passwordTF.getText());
+                    } else {
+						netLoginConnection.login(loginTF.getText(), passwordTF.getText());
+                    }
 					loginDialog.setVisible(false);
 				} catch (IOException ex) {
 					showError(ex.getMessage());
@@ -329,7 +361,6 @@ public class NetLoginGUI extends JFrame {
 		button.setSelected(true);
 		loginDialog.setContentPane(panel);
 		loginDialog.setTitle("Login");
-		// loginDialog.setVisible(true);
 		loginDialog.setVisible(false);
 		loginDialog.setBounds(p.getLoginDialogBounds());
 		loginDialog.setBounds(12, 12, 270, 120);
@@ -354,9 +385,9 @@ public class NetLoginGUI extends JFrame {
 
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				loginDialog.setVisible(true);
 				loginDialog.setBounds(p.getLoginDialogBounds());
 				loginDialog.setLocationRelativeTo(null);
+				loginDialog.setVisible(true);
 			}
 		});
 		netLoginMenu.add(menuItem);
@@ -379,7 +410,7 @@ public class NetLoginGUI extends JFrame {
 				openURL(passwdChangeURL);
 			}
 		});
-		menuItem.setEnabled(false);
+		menuItem.setEnabled(true);
 		changePWMenuItem = menuItem;
 		netLoginMenu.add(menuItem);
 		netLoginMenu.addSeparator();
@@ -388,7 +419,6 @@ public class NetLoginGUI extends JFrame {
 		menuItem.setFont(globalFont);
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				savePreferences();
 				System.exit(0);
 			}
 		});
@@ -415,7 +445,9 @@ public class NetLoginGUI extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.add(netLoginMenu);
 		menuBar.add(helpMenu);
-		setJMenuBar(menuBar);
+
+        if (windowAsDialog != null) windowAsDialog.setJMenuBar(menuBar);
+        if (windowAsFrame != null) windowAsFrame.setJMenuBar(menuBar);
 	}
 
 	public static void openURL(String url) {
@@ -423,15 +455,12 @@ public class NetLoginGUI extends JFrame {
 		try {
 			if (osName.startsWith("Mac")) {// Mac OS
 				Class fileMgr = Class.forName("com.apple.eio.FileManager");
-				Method openURL = fileMgr.getDeclaredMethod("openURL",
-						new Class[] { String.class });
-				openURL.invoke(null, new Object[] { url });
+				Method openURL = fileMgr.getDeclaredMethod("openURL", new Class[] { String.class });
+				openURL.invoke(null, url);
 			} else if (osName.startsWith("Windows")) {// Windows
-				Runtime.getRuntime().exec(
-						"rundll32 url.dll,FileProtocolHandler " + url);
+				Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
 			} else { // Unix or Linux
-				String[] browsers = { "firefox", "opera", "konqueror",
-						"epiphany", "mozilla", "netscape" };
+				String[] browsers = { "firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" };
 				String browser = null;
 				for (int count = 0; count < browsers.length && browser == null; count++) {
 					if (Runtime.getRuntime().exec(
@@ -451,43 +480,32 @@ public class NetLoginGUI extends JFrame {
 		}
 	}
 
-	public void minimizeToTray() {
-		String label="Status:Discounnted";
-		if (connected) label="Status:Connected"+" InternetPlan:"+plan_name;
-		SystemTray tray = SystemTray.getSystemTray(); 
-		try{
-	     tray.add(trayIcon); 
-	     trayIcon.setToolTip(label);
-	   }catch(Exception e)
-		{
-			System.out.println("add trayIcon error"+e);
-		}
+	public void updateTrayLabel() {
+		if (trayIcon == null) return;
+
+		String label = "Status:Disconnected";
+		if (connected) label = "Status:Connected" + " InternetPlan:" + plan_name;
+        
+		trayIcon.setToolTip(label);
+
+        if (connected) {
+            trayIcon.setImage(iconConnected);
+        } else {
+            trayIcon.setImage(iconDisconnected);
+        }
+        
 	}
 
 	private void initTrayIcon() {
-		Image image = Toolkit.getDefaultToolkit().getImage(
-				this.getClass().getResource(icon_imagename));
+        if (!isSystemTraySupported()) return;
+
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        iconDefault = toolkit.getImage(this.getClass().getResource("StatusIcon.png"));
+        iconConnected = toolkit.getImage(this.getClass().getResource("StatusIconConnected.png"));
+        iconConnecting = toolkit.getImage(this.getClass().getResource("StatusIconConnecting.png"));
+        iconDisconnected = toolkit.getImage(this.getClass().getResource("StatusIconDisconnected.png"));
+
 		PopupMenu popup = new PopupMenu();
-		
-		 MouseListener mouseListener = new MouseListener() {
-			public void mouseClicked(MouseEvent e) {
-				SystemTray.getSystemTray().remove(trayIcon);
-				setState(Frame.NORMAL); 
-				setVisible(true);
-				toFront();               
-             }
-			public void mouseEntered(MouseEvent e) {
-			}
-
-			public void mouseExited(MouseEvent e) {
-			}
-
-			public void mousePressed(MouseEvent e) {
-			}
-
-			public void mouseReleased(MouseEvent e) {
-			}
-         };
 		
 		MenuItem helpItem = new MenuItem("Help");
 		ActionListener helpListener = new ActionListener() {
@@ -513,14 +531,10 @@ public class NetLoginGUI extends JFrame {
 		};
 		passwordItem.addActionListener(passwordListener);
 		
-		
 		MenuItem openItem = new MenuItem("Open JNetLogin");
 		ActionListener showListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				SystemTray.getSystemTray().remove(trayIcon);
-				setState(Frame.NORMAL); 
-				setVisible(true);
-				toFront();
+				openWindow();
 			}
 		};
 		openItem.addActionListener(showListener);
@@ -541,9 +555,21 @@ public class NetLoginGUI extends JFrame {
 		popup.add(openItem);
 		popup.add(exitItem);
 		
-		trayIcon = new TrayIcon(image, "MyIcon", popup);
-		trayIcon.setImageAutoSize(true);
-		trayIcon.addMouseListener(mouseListener);
+		trayIcon = new TrayIcon(iconDefault, "NetLogin", popup);
+		trayIcon.setImageAutoSize(false);
+		trayIcon.setToolTip("NetLogin");
+		trayIcon.addMouseListener(new MouseInputAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				openWindow();
+			}
+		});
+				
+		SystemTray tray = SystemTray.getSystemTray();
+		try {
+			tray.add(trayIcon); 
+	   } catch (Exception e) {
+			System.err.println("Unable to add system tray: " + e.getMessage());
+		}
 	}
 
 }

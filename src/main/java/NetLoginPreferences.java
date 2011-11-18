@@ -5,7 +5,8 @@ import javax.swing.*;
 import java.awt.event.*;
 import javax.swing.event.*;
 
-class NetLoginPreferences{
+public class NetLoginPreferences {
+	
 	private Properties p = new Properties();
 	private final Font globalFont = new Font( "Dialog", Font.PLAIN, 12 );
 
@@ -55,11 +56,9 @@ class NetLoginPreferences{
 			p.put( "altServer", "gate.ec.auckland.ac.nz" );
 			p.put( "useStaticPingPort", "false" );
 		}
-
-
 	}
 
-	public void savePreferences(){
+	public void savePreferences() {
 	}
 
 	public void showPreferencesDialog(){
@@ -77,14 +76,13 @@ class NetLoginPreferences{
 		final JTextField altServerTF = new JTextField( p.getProperty( "altServer" ) );
 		final JCheckBox useStaticPingPortCB = new JCheckBox( "Static ping port", p.getProperty( "useStaticPingPort" ).equals( "true" ) );
 		useStaticPingPortCB.setFont( globalFont );
-		altServerCB.addChangeListener( new ChangeListener(){
+		altServerCB.addChangeListener( new ChangeListener() {
 					public void stateChanged( ChangeEvent e ){
-						if( ((JCheckBox)e.getSource()).isSelected() )
-							altServerTF.setEnabled( true );
-						else
-							altServerTF.setEnabled( false );
+						boolean useAltServer = ((JCheckBox)e.getSource()).isSelected();
+                        altServerTF.setEnabled(useAltServer);
 					}
 				});
+        altServerTF.setEnabled(altServerCB.isSelected());
 		addExternal( panel, gbc, 0, 0, altServerCB, GridBagConstraints.NONE, GridBagConstraints.WEST );
 		gbc.weightx = 7.0;
 		addExternal( panel, gbc, 1, 0, altServerTF, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST );
@@ -114,8 +112,8 @@ class NetLoginPreferences{
 		preferencesDialog.setContentPane( panel );
 		preferencesDialog.setBounds( 100, 100, 300, 130 );
 		preferencesDialog.setTitle( "JNetLogin - Preferences" );
+        preferencesDialog.setLocationRelativeTo(null);
 		preferencesDialog.setVisible(true);
-		preferencesDialog.setLocationRelativeTo(null);
 	}
 
 	private void addExternal( JPanel panel, GridBagConstraints constraints, int x, int y,

@@ -5,6 +5,7 @@ import java.util.*;
 import nz.ac.auckland.cs.des.*;
 
 public class PasswordChanger {
+    
 	// passwdd packet types
 	final int PWD_VERSION		= 1;
 	final int PWD_CHANGE_PKT	= 1;
