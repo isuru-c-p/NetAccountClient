@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -7,16 +6,16 @@ import javax.swing.event.*;
 import java.lang.reflect.Method;
 import java.awt.Window;
 
-public class NetLoginGUI extends JPanel {
+public class NetLoginGUI extends JPanel implements PingListener {
 
 	private Window window;
     private JFrame windowAsFrame;
     private JDialog windowAsDialog;
 
 	private static final long serialVersionUID = 1L;
-	private JLabel upititle = new JLabel("NetID/UPI:  ");
-	private JLabel plantitle = new JLabel("Internet Plan:  ");
-	private JLabel usagetitle = new JLabel("MBs used this month:  ");
+	private JLabel upiTitle = new JLabel("NetID/UPI:  ");
+	private JLabel planTitle = new JLabel("Internet Plan:  ");
+	private JLabel usageTitle = new JLabel("MBs used this month:  ");
 	private JLabel statusLabel = new JLabel("Not Connected");
 	private JLabel planLabel = new JLabel("");
 	private JLabel usageLabel = new JLabel("");
@@ -143,12 +142,12 @@ public class NetLoginGUI extends JPanel {
 		gbc.weighty = 1.0;
 		gbc.anchor = GridBagConstraints.CENTER;
 
-		upititle.setFont(globalTitleFont);
-		plantitle.setFont(globalTitleFont);
-		usagetitle.setFont(globalTitleFont);
-		upititle.setForeground(globalTitleColor);
-		plantitle.setForeground(globalTitleColor);
-		usagetitle.setForeground(globalTitleColor);
+		upiTitle.setFont(globalTitleFont);
+		planTitle.setFont(globalTitleFont);
+		usageTitle.setFont(globalTitleFont);
+		upiTitle.setForeground(globalTitleColor);
+		planTitle.setForeground(globalTitleColor);
+		usageTitle.setForeground(globalTitleColor);
 
 		statusLabel.setFont(globalFont);
 		planLabel.setFont(globalFont);
@@ -167,11 +166,11 @@ public class NetLoginGUI extends JPanel {
 			}
 		});
 
-		addExternal(mainPanel, gbc, 0, 0, upititle,
+		addExternal(mainPanel, gbc, 0, 0, upiTitle,
 				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
-		addExternal(mainPanel, gbc, 0, 1, plantitle,
+		addExternal(mainPanel, gbc, 0, 1, planTitle,
 				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
-		addExternal(mainPanel, gbc, 0, 2, usagetitle,
+		addExternal(mainPanel, gbc, 0, 2, usageTitle,
 				GridBagConstraints.VERTICAL, GridBagConstraints.EAST);
 		addExternal(mainPanel, gbc, 1, 0, statusLabel,
 				GridBagConstraints.VERTICAL, GridBagConstraints.WEST);

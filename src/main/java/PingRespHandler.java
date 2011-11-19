@@ -1,68 +1,49 @@
 import java.io.*;
 import java.net.*;
-import java.lang.*;
-import java.util.*;
 import nz.ac.auckland.cs.des.*;
 
 public class PingRespHandler extends Thread {
 	
-	private NetLoginGUI netLogingui=null;
-	private NetLoginCMD netLogincmd=null;
-	
-	//Response ping packet Commands
-	private final int ACK		= 1;	
-	private final int NACK		= 0; 	//will cause a shutdown.
-	private int inToken			= 0;
-	private DatagramSocket s	= null;
-	private Key_schedule schedule		= null; //set up encryption key to the users passwd
-	private volatile boolean loop		= true;
-    private int Next_Sequence_Number_Expected = 0;
+	private PingListener netLogin;
+
+	// Response ping packet Commands
+	private final int ACK = 1;
+	private final int NACK = 0; // will cause a shutdown.
+	private int inToken = 0;
+	private DatagramSocket socket = null;
+	private Key_schedule schedule = null; // set up encryption key to the users passwd
+	private volatile boolean loop = true;
+    private int nextSequenceNumberExpected = 0;
 	private PingSender pinger;
 
-	public PingRespHandler( NetLoginGUI netLogin, PingSender pinger ) throws IOException {
-		this.netLogingui = netLogin;
+	public PingRespHandler(PingListener netLogin, PingSender pinger) throws IOException {
+		this.netLogin = netLogin;
 		this.pinger = pinger;
-		s = new DatagramSocket(); //Dynamic allocation of the Port Number 
-		s.setSoTimeout( 500 );	// set timeout to half a second
+		socket = new DatagramSocket(); //Dynamic allocation of the Port Number
+		socket.setSoTimeout( 500 ); // set timeout to half a second
 	}
-	
-	public PingRespHandler( NetLoginCMD netLogin, PingSender pinger ) throws IOException {
-		this.netLogincmd = netLogin;
-		this.pinger = pinger;
-		s = new DatagramSocket(); //Dynamic allocation of the Port Number 
-		s.setSoTimeout( 500 );	// set timeout to half a second
-	}
-	
+
 	/*
 	 * Use supplied socket instead of making one with a dynamically
-	 * allocated port, when using this send a responce port of 0, and 
-	 * Robs new ping daemon will just send ping responces to the same
-	 * port it recieves them on.
+	 * allocated port, when using this send a response port of 0, and
+	 * Robs new ping daemon will just send ping responses to the same
+	 * port it receives them on.
 	 */
-	public PingRespHandler( NetLoginGUI netLogin, PingSender pinger,
-				DatagramSocket socket ) throws IOException {
-		this.netLogingui = netLogin;
+	public PingRespHandler(PingListener netLogin, PingSender pinger, DatagramSocket socket) throws IOException {
+		this.netLogin = netLogin;
 		this.pinger = pinger;
-		s = socket; //Use same socket we use for sending pings
-		s.setSoTimeout( 500 );	// set timeout to half a second
+		this.socket = socket; // Use same socket we use for sending pings
+		this.socket.setSoTimeout(500); // set timeout to half a second
 	}
-	
-	public PingRespHandler( NetLoginCMD netLogin, PingSender pinger,
-			DatagramSocket socket ) throws IOException {
-	this.netLogincmd = netLogin;
-	this.pinger = pinger;
-	s = socket; //Use same socket we use for sending pings
-	s.setSoTimeout( 500 );	// set timeout to half a second
-}
 
-	public void prepare( int randomIn, int squenceNum, Key_schedule sched ){
+	public void prepare(int randomIn, int sequenceNum, Key_schedule sched){
 		inToken = randomIn;
-		Next_Sequence_Number_Expected = squenceNum;	
+		nextSequenceNumberExpected = sequenceNum;
 		schedule = sched;
 	}
 
 	public int getLocalPort(){
-		return s.getLocalPort();
+		return socket.getLocalPort();
 	}
 
 	public void end(){
@@ -70,9 +51,9 @@ public class PingRespHandler extends Thread {
 		interrupt();
 	}
 
-	public synchronized void run( ){
+	public synchronized void run(){
 		byte recvBytes[] = new byte[ 8192 ];
-		DatagramPacket incomingPacket = new DatagramPacket( recvBytes, recvBytes.length );
+		DatagramPacket incomingPacket;
 		desDataInputStream des_in;
 		byte message[];
 		int random_returned;
@@ -82,14 +63,14 @@ public class PingRespHandler extends Thread {
 		int Command;
 		int message_length;
 		int bad = 0;
-		int OnPlan = 0;
+		int onPlan;
 			
 		setPriority( Thread.MAX_PRIORITY / 4 );
 		while( loop && bad < 10 && pinger.getOutstandingPings() < 5 ){
 			
 			incomingPacket = new DatagramPacket( recvBytes, recvBytes.length );
 			try{
-				s.receive( incomingPacket );
+				socket.receive( incomingPacket );
 			} catch( InterruptedIOException e ){
 				// end() interrupted is and wants us to stop or socket timeout
 				continue;
@@ -118,31 +99,30 @@ public class PingRespHandler extends Thread {
 				
 				Seq_number_returned = des_in.readInt();
 				
-				if( Next_Sequence_Number_Expected > Seq_number_returned ) {	// Probably a delayed packet
+				if( nextSequenceNumberExpected > Seq_number_returned ) {	// Probably a delayed packet
 					System.out.println( "Ping responce sequence numbers out" );
 					continue;
 				}
 				
-				Next_Sequence_Number_Expected  = Seq_number_returned + 1;  //Catch up.
+				nextSequenceNumberExpected = Seq_number_returned + 1; //Catch up.
 				
 				
 				/* from client version 3, These will be replaced by display user Internet Plan and monthly usage*/
 				//IP_balance = des_in.readInt();
 				IP_usage = des_in.readInt();
 				
-				Command	 = des_in.readInt();
+				Command = des_in.readInt();
 				
 				//OnPeak = des_in.readInt();
-				OnPlan=des_in.readInt();
+				onPlan = des_in.readInt();
 				
 				message_length = des_in.readInt();
 				message = new byte[ message_length ];
 				des_in.read( message );
 				
 				//netLogin.update( IP_balance, ( OnPeak & 0x01 ) == 0x01, true, new String( message ) );
-				if (netLogingui!=null) 	netLogingui.updateV3(IP_usage,OnPlan,true,new String(message));
-				if (netLogincmd!=null) 	netLogincmd.updateV3(IP_usage,OnPlan,true,new String(message));
-					
+				netLogin.updateV3(IP_usage, onPlan, true, new String(message));
+
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
 				
@@ -157,7 +137,7 @@ public class PingRespHandler extends Thread {
 		if( pinger.getOutstandingPings() < 5 ){
 			System.err.println( "Max outstanding pings reached, disconnecting" );
 		}
-		if (netLogingui!=null)	netLogingui.update( 0, false, false );
-		if (netLogincmd!=null)	netLogincmd.update( 0, false, false );
+		netLogin.update( 0, false, false );
+		
 	}
 }

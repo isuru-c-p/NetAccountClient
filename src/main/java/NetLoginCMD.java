@@ -1,31 +1,24 @@
-import java.io.*;
-import java.net.*;
-import java.lang.*;
-import java.util.*;
 
-public class NetLoginCMD {
-	    
-	    String upi;
-	    String password;
-	    private NetLoginConnection netLoginConnection = null;
+public class NetLoginCMD implements PingListener {
+		
+		private String upi;
+		private NetLoginConnection netLoginConnection = null;
 		private boolean displayStatus = false;
 		
-	    
 		public NetLoginCMD(String upi, String password) {
-			this.upi=upi;
-			this.password=password;
-			try{
+			this.upi = upi;
+
+			try {
 				netLoginConnection = new NetLoginConnection(this);
 				netLoginConnection.logincmdline(upi, password);
-			}catch(Exception e)
-			{
+			} catch(Exception e) {
 				System.out.println(e);
 			}
 		}
 		
 		public void update(int balance, boolean onPeak, boolean connected) {
 			if (connected) {
-				System.out.println("UPI:"+this.upi+" Status:Connected");
+				System.out.println("UPI:" + upi + " Status:Connected");
 			} else {
 				//disconnect(); // to make sure
 				System.out.println("Disconnected");
@@ -36,10 +29,12 @@ public class NetLoginCMD {
 
 		/* new update menthod for client version >=3 netlogin */
 		public void updateV3(int ip_usage, int user_plan_flags, boolean connected,String message) {
-			String plan_name = "";
+			String plan_name;
+			
 			if (connected) {
 				float MBs_usage = (float) (Math.round((ip_usage / 1024.0) * 100)) / 100;
 				user_plan_flags = user_plan_flags & 0x0F000000;
+
 				switch (user_plan_flags) {
 				case 0x01000000: // STATUS_UNLIMITED:
 					plan_name = "Unlimited";
@@ -59,18 +54,19 @@ public class NetLoginCMD {
 				default:
 					plan_name = "";
 				}
-				if (this.displayStatus)
+				
+				if (this.displayStatus) {
 					System.out.print("..");
-				else
-				{
+				} else {
 					System.out.println("Status:Connected");
-					System.out.println("UPI:"+this.upi);
-					System.out.println("Internet Plan:"+plan_name+"\nMBs used this month:"+MBs_usage+"MBs");
+					System.out.println("UPI:" + upi);
+					System.out.println("Internet Plan:" + plan_name + "\nMBs used this month:" + MBs_usage + "MBs");
 					System.out.print("Pingd is active:.");
-					this.displayStatus=true;
+					this.displayStatus = true;
 				}
+				
 			} else {
-			//	disconnect(); // to make sure
+				// disconnect(); // to make sure
 				System.out.println("Disconnected");
 				displayStatus = false;
 				System.exit(0);

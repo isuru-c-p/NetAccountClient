@@ -1,17 +1,17 @@
 import java.io.*;
-import javax.swing.UIManager;
-import static java.util.Arrays.*;
+import java.util.Arrays;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 /*
  * NetLogin
- * Mikey - 2001
- * Jason - 2009 
+ * @author Mikey - 2001
+ * @author Jason Liu - 2009
+ * @author Robert Egglestone - 2011
  */
 public class NetLogin {
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		
 		if (args.length==0) {
 			// no command line startup
@@ -20,18 +20,18 @@ public class NetLogin {
 			// command line startup
 			OptionParser parser = new OptionParser() {
 				{
-					accepts( "u" ).withRequiredArg().ofType( String.class ).describedAs( "upi" );
-					accepts( "p" ).withOptionalArg().ofType( String.class ).describedAs( "password" );
-					acceptsAll( asList( "g", "GUI", "gui" ), "command line for upi and password input, but still display GUI interface" );
-					acceptsAll( asList( "h", "?" ), "show help" );
+					accepts("u").withRequiredArg().ofType(String.class).describedAs("upi");
+					accepts("p").withOptionalArg().ofType(String.class).describedAs("password");
+					acceptsAll(Arrays.asList("g", "GUI", "gui"), "command line for upi and password input, but still display GUI interface");
+					acceptsAll(Arrays.asList("h", "?"), "show help");
 				}
 			};
-			try{
+			try {
 				OptionSet options = parser.parse(args);
 
 				// HELP print
 				if (options.has("?")) {
-					parser.printHelpOn( System.out );
+					parser.printHelpOn( System.err );
 					System.exit(0);
 				}
 			
@@ -41,7 +41,7 @@ public class NetLogin {
 					String upi= options.valueOf("u").toString();
 					
 					if (upi == null || upi.length() == 0) {
-						System.out.println("Please type your upi with option -u");
+						System.err.println("Please type your upi with option -u");
 						System.exit(0);
 					}
 					
@@ -62,7 +62,7 @@ public class NetLogin {
 					}
 					
 					if(password == null) {
-						 System.out.println("No password entered");
+						 System.err.println("No password entered");
 						 System.exit(0);
 					}
 					
@@ -76,8 +76,12 @@ public class NetLogin {
 				}
 				
 			} catch(Exception e) {
-				System.out.println(e.getMessage());
-				parser.printHelpOn(System.out);
+				System.err.println(e.getMessage());
+				try {
+					parser.printHelpOn(System.err);
+				} catch (IOException e2) {
+					System.err.println("Unable to display help: " + e2.getMessage());
+				}
 				System.exit(0);
 			}
 			
