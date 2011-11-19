@@ -1,4 +1,3 @@
-import java.io.*;
 import java.util.*;
 import java.awt.*;
 import javax.swing.*;
@@ -8,7 +7,7 @@ import javax.swing.event.*;
 public class NetLoginPreferences {
 	
 	private Properties p = new Properties();
-	private final Font globalFont = new Font( "Dialog", Font.PLAIN, 12 );
+	private final Font globalFont = new Font("Dialog", Font.PLAIN, 12);
 
 	public NetLoginPreferences(){
 		loadProperties();
@@ -25,9 +24,6 @@ public class NetLoginPreferences {
 			p.put( "loginDialogY", "100" );
 			p.put( "loginDialogWidth", "200" );
 			p.put( "loginDialogHeight", "80" );
-			p.put( "useAltServer", "false" );
-			p.put( "altServer", "gate.ec.auckland.ac.nz" );
-			p.put( "useStaticPingPort", "false" );
 		}else if( System.getProperty( "os.name" ).equals( "Mac OS X" ) ){
 			p.put( "mainDialogX", "50" );
 			p.put( "mainDialogY", "50" );
@@ -38,9 +34,6 @@ public class NetLoginPreferences {
 			p.put( "loginDialogY", "100" );
 			p.put( "loginDialogWidth", "200" );
 			p.put( "loginDialogHeight", "130" );
-			p.put( "useAltServer", "false" );
-			p.put( "altServer", "gate.ec.auckland.ac.nz" );
-			p.put( "useStaticPingPort", "false" );
 		}else{
 			//System.err.println( "Unknown OS: " + System.getProperty( "os.name" ) + ", using defaults.");
 			p.put( "mainDialogX", "50" );
@@ -52,10 +45,11 @@ public class NetLoginPreferences {
 			p.put( "loginDialogY", "100" );
 			p.put( "loginDialogWidth", "200" );
 			p.put( "loginDialogHeight", "130" );
-			p.put( "useAltServer", "false" );
-			p.put( "altServer", "gate.ec.auckland.ac.nz" );
-			p.put( "useStaticPingPort", "false" );
 		}
+
+		p.put( "useAltServer", "false" );
+		p.put( "altServer", "gate.ec.auckland.ac.nz" );
+		p.put( "useStaticPingPort", "false" );
 	}
 
 	public void savePreferences() {
@@ -63,6 +57,8 @@ public class NetLoginPreferences {
 
 	public void showPreferencesDialog(){
 		final JDialog preferencesDialog = new JDialog();
+		preferencesDialog.setResizable(false);
+
 		JPanel panel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();

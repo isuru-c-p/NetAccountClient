@@ -138,7 +138,7 @@ public class PingSender extends Thread {
 			System.err.println("Error closing socket: " + e);
 		}
 		
-		netLogin.update(0, false, false);
+		netLogin.disconnected();
 
 	}
 }

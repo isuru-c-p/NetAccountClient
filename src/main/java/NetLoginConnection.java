@@ -1,6 +1,3 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.applet.*;
 import java.io.*;
 import java.net.*;
 import java.lang.*;
@@ -64,7 +61,7 @@ public class NetLoginConnection {
 	SPP_Packet NetGuardian_stream = null;
 
 	int Auth_Ref; 	//Reference to quote when we ping
-	int IPBalance; 	//Our IP Balance
+	int IPUsage; 	//Our IP Balance
 	int Response_Port;  //Our Port. the Server sends Ping responses to it
 
 	PingSender pinger = null;
@@ -72,7 +69,7 @@ public class NetLoginConnection {
 	boolean useStaticPingPort = false;
 	String username;
 
-	int OnPeak; 					//True of False. Used in ping packets & Statusd. in net byte order
+	int onPlan; 					//True of False. Used in ping packets & Statusd. in net byte order
 	int localUnitCost; 				//c/MBytes of data for NZ traffic
 	int intlOffPeakRate; 			//c/MBytes of data for international traffic
 	int intlOnPeakRate; 			//c/MBytes of data for international traffic
@@ -117,8 +114,7 @@ public class NetLoginConnection {
 		login( AUTHD_SERVER, username, password );
 	}	
 
-	public void login( String server, String username, String password ) throws IOException{
-	
+	public void login( String server, String username, String password ) throws IOException {
 		this.username = username;
 		pinger = new PingSender( server, PINGD_PORT, parentgui );
 		if( useStaticPingPort ){
@@ -133,7 +129,8 @@ public class NetLoginConnection {
 		ping_receiver.prepare( random1 + 3, Sequence_Number, schedule );
 		ping_receiver.start();
 		pinger.start();
-		parentgui.update( IPBalance, ( OnPeak & 0x01 ) == 0x01, true  );
+		
+		parentgui.connected(IPUsage, onPlan);
 	}
 
 	public void setUseStaticPingPort( boolean b ){
@@ -294,7 +291,7 @@ public class NetLoginConnection {
 		//too short for random2, ack and string
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 28 ) );
-		OnPeak = unencrypted_data_input_Stream.readInt();
+		onPlan = unencrypted_data_input_Stream.readInt();
 		localUnitCost = unencrypted_data_input_Stream.readInt();
 		intlOffPeakRate = unencrypted_data_input_Stream.readInt();
 		intlOnPeakRate = unencrypted_data_input_Stream.readInt();
@@ -323,7 +320,7 @@ public class NetLoginConnection {
 			throw new IOException( "Cmd result buffer too small" );
 		else {
 			Auth_Ref = des_in.readInt();
-			IPBalance = des_in.readInt();
+			IPUsage = des_in.readInt();
 		}
 	}
 }

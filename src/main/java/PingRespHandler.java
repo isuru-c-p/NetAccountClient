@@ -59,8 +59,8 @@ public class PingRespHandler extends Thread {
 		int random_returned;
 		int Seq_number_returned;
 		int packet_length;
-		int IP_usage;
-		int Command;
+		int ipUsage;
+		int command;
 		int message_length;
 		int bad = 0;
 		int onPlan;
@@ -106,27 +106,20 @@ public class PingRespHandler extends Thread {
 				
 				nextSequenceNumberExpected = Seq_number_returned + 1; //Catch up.
 				
-				
-				/* from client version 3, These will be replaced by display user Internet Plan and monthly usage*/
-				//IP_balance = des_in.readInt();
-				IP_usage = des_in.readInt();
-				
-				Command = des_in.readInt();
-				
-				//OnPeak = des_in.readInt();
+				ipUsage = des_in.readInt();
+				command = des_in.readInt();
 				onPlan = des_in.readInt();
 				
 				message_length = des_in.readInt();
-				message = new byte[ message_length ];
-				des_in.read( message );
-				
-				//netLogin.update( IP_balance, ( OnPeak & 0x01 ) == 0x01, true, new String( message ) );
-				netLogin.updateV3(IP_usage, onPlan, true, new String(message));
+				message = new byte[message_length];
+				des_in.read(message);
+
+				netLogin.update(ipUsage, onPlan, new String(message));
 
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
 				
-				if( Command == NACK ) {
+				if( command == NACK ) {
 					end(); //kill own thread
 				}
 			} catch( Exception e ) {
@@ -137,7 +130,7 @@ public class PingRespHandler extends Thread {
 		if( pinger.getOutstandingPings() < 5 ){
 			System.err.println( "Max outstanding pings reached, disconnecting" );
 		}
-		netLogin.update( 0, false, false );
 		
+		netLogin.disconnected();
 	}
 }

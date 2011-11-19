@@ -1,7 +1,9 @@
 public interface PingListener {
 
-	public void update(int balance, boolean onPeak, boolean connected);
+	public void connected(int ipUsage, int userPlanFlags);
 
-	public void updateV3(int ip_usage, int user_plan_flags, boolean connected,String message);
+	public void update(int ipUsage, int userPlanFlags, String message);
+
+	public void disconnected();
 
 }
