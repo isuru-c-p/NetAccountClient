@@ -1,3 +1,4 @@
+import nz.ac.auckland.netlogin.gui.AboutDialog;
 import nz.ac.auckland.netlogin.gui.LoginDialog;
 
 import java.awt.*;
@@ -38,8 +39,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private JMenuItem changePassMenuItem;
 
 	private LoginDialog loginDialog;
+	private AboutDialog aboutDialog;
 
-	private NetLoginConnection netLoginConnection = null;
+	private NetLoginConnection netLoginConnection;
 	private boolean connected = false;
 
 	private final Color labelColor = new Color(51, 102, 255);
@@ -47,14 +49,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private boolean useSystemTray = true;
 	private TrayIcon trayIcon;
 	private String planName = "";
-	
-	static String versionNumber = "3.0.4";
+
 	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
 	static String icon_imagename="jnetlogin16x16.gif";
-	static String aboutInfo = "JNetLogin Client Version "+ versionNumber
-		+ "\nCopyright(C) 2001-2011 The University of Auckland.\n"
-            + "Release under terms of the GNU GPL. \n";
 
     private JPanel mainPanel;
 
@@ -64,20 +62,21 @@ public class NetLoginGUI extends JPanel implements PingListener {
     private Image iconDisconnected;
 
     public NetLoginGUI() {
-		loadLookAndFeel();
-		initBody();
-		createWindow();
-        initTrayIcon();
+		initialize();
 		openWindow();
 	}
 
 	public NetLoginGUI(String upi, String password) {
+		initialize();
+		login(upi, password);
+		minimizeWindow();
+	}
+
+	private void initialize() {
 		loadLookAndFeel();
 		initBody();
 		createWindow();
-		login(upi, password);
-        initTrayIcon();
-		minimizeWindow();
+		initTrayIcon();
 	}
 
 	private void loadLookAndFeel() {
@@ -94,16 +93,16 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			windowAsDialog.setContentPane(mainPanel);
             windowAsDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             windowAsDialog.setResizable(false);
+			windowAsDialog.setJMenuBar(createMenuBar());
 			window = windowAsDialog;
 		} else {
 			windowAsFrame = new JFrame("NetLogin");
 			windowAsFrame.setContentPane(mainPanel);
             windowAsFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             windowAsFrame.setResizable(false);
+			windowAsFrame.setJMenuBar(createMenuBar());
 			window = windowAsFrame;
 		}
-
-		makeMenuBar();
 
 		window.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -148,9 +147,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public void initBody() {
-		if (netLoginConnection == null) {
-			netLoginConnection = new NetLoginConnection(this);
-		}
+		netLoginConnection = new NetLoginConnection(this);
 
 		loginDialog = new LoginDialog();
 		loginDialog.addLoginListener(new LoginDialog.LoginListener() {
@@ -167,6 +164,8 @@ public class NetLoginGUI extends JPanel implements PingListener {
 				}
 			}
 		});
+
+		aboutDialog = new AboutDialog();
 
 		mainPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
@@ -238,9 +237,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		updateTrayLabel();
 	}
 
-	public void update(int ip_usage, int planFlags, String message) {
-		float MBs_usage = (float) (Math.round((ip_usage / 1024.0) * 100)) / 100;
-		usageLabel.setText("" + MBs_usage + "MBs");
+	public void update(int ipUsage, int planFlags, String message) {
+		float ipUsageMb = (float)(Math.round((ipUsage / 1024.0) * 100)) / 100;
+		usageLabel.setText("" + ipUsageMb + "MBs");
 
 		planFlags = planFlags & 0x0F000000;
 		switch (planFlags) {
@@ -270,16 +269,12 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		updateTrayLabel();
 	}
 
-	public void showAbout() {
-		JOptionPane.showMessageDialog(this,aboutInfo);
-	}
-
 	private void showError(String errorMsg) {
 		JOptionPane.showMessageDialog(this, "NetLogin - " + errorMsg);
 		disconnect();
 	}
 
-	private void makeMenuBar() {
+	private JMenuBar createMenuBar() {
 		loginMenuItem = new JMenuItem("Login", 'l');
 		logoutMenuItem = new JMenuItem("Logout", 'l');
 		logoutMenuItem.setEnabled(false);
@@ -317,11 +312,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		preferencesMenuItem.addActionListener(EventHandler.create(ActionListener.class, p, "showPreferencesDialog"));
 		changePassMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "changePassword"));
 		quitMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "quit"));
-		aboutMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "showAbout"));
+		aboutMenuItem.addActionListener(EventHandler.create(ActionListener.class, aboutDialog, "open"));
 		chargeRatesMenuItem.addActionListener(EventHandler.create(ActionListener.class, p, "showChargeRates"));
 
-        if (windowAsDialog != null) windowAsDialog.setJMenuBar(menuBar);
-        if (windowAsFrame != null) windowAsFrame.setJMenuBar(menuBar);
+		return menuBar;
 	}
 
 	public void showChargeRates() {
