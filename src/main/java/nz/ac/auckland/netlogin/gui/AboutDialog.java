@@ -18,7 +18,7 @@ public class AboutDialog {
 	}
 
 	public String getMessage() {
-		StringBuffer message = new StringBuffer();
+		StringBuilder message = new StringBuilder();
 
 		message.append("NetLogin Client");
 		if (version != null) message.append(" Version ").append(version);
