@@ -9,7 +9,7 @@ public class NetLoginCMD implements PingListener {
 		this.upi = upi;
 		try {
 			netLoginConnection = new NetLoginConnection(this);
-			netLoginConnection.logincmdline(upi, password);
+			netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, upi, password);
 		} catch(Exception e) {
 			System.out.println(e);
 		}

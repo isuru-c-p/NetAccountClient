@@ -21,8 +21,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private String username;
 
 	private Window window;
-    private JFrame windowAsFrame;
-    private JDialog windowAsDialog;
+    private JFrame iconifiableWindow;
 
 	private JLabel upiTitle = new JLabel("NetID/UPI:  ");
 	private JLabel planTitle = new JLabel("Internet Plan:  ");
@@ -32,11 +31,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private JLabel usageLabel = new JLabel("");
 
 	private NetLoginPreferences p = new NetLoginPreferences();
-	private JButton connectButton = new JButton("Connect...");
 
+	private JButton connectButton;
 	private JMenuItem loginMenuItem;
 	private JMenuItem logoutMenuItem;
-	private JMenuItem changePassMenuItem;
 
 	private LoginDialog loginDialog;
 	private AboutDialog aboutDialog;
@@ -73,6 +71,8 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	private void initialize() {
+		netLoginConnection = new NetLoginConnection(this);
+
 		loadLookAndFeel();
 		initBody();
 		createWindow();
@@ -89,19 +89,19 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	public void createWindow() {
 		if (isSystemTraySupported()) {
-			windowAsDialog = new JDialog((Frame)null, "NetLogin");
-			windowAsDialog.setContentPane(mainPanel);
-            windowAsDialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-            windowAsDialog.setResizable(false);
-			windowAsDialog.setJMenuBar(createMenuBar());
-			window = windowAsDialog;
+			JDialog dialog = new JDialog((Frame)null, "NetLogin");
+			dialog.setContentPane(mainPanel);
+            dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            dialog.setResizable(false);
+			dialog.setJMenuBar(createMenuBar());
+			window = dialog;
 		} else {
-			windowAsFrame = new JFrame("NetLogin");
-			windowAsFrame.setContentPane(mainPanel);
-            windowAsFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-            windowAsFrame.setResizable(false);
-			windowAsFrame.setJMenuBar(createMenuBar());
-			window = windowAsFrame;
+			JFrame frame = new JFrame("NetLogin");
+			frame.setContentPane(mainPanel);
+            frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            frame.setResizable(false);
+			frame.setJMenuBar(createMenuBar());
+			window = iconifiableWindow = frame;
 		}
 
 		window.addWindowListener(new WindowAdapter() {
@@ -118,10 +118,14 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	
 	public void login(String upi, String password) {
 		this.username = upi; // for displaying in the user interface
-		netLoginConnection = new NetLoginConnection(this);
+		
 		netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
 		try {
-			netLoginConnection.login(upi, password);
+			if (p.getUseAltServer()) {
+				netLoginConnection.login(p.getAltServer(), upi, password);
+			} else {
+				netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, upi, password);
+			}
 		} catch (IOException ex) {
 			showError(ex.getMessage());
 		}
@@ -133,7 +137,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 	
 	public void openWindow() {
-		if (!isSystemTraySupported()) windowAsFrame.setExtendedState(Frame.NORMAL);
+		if (!isSystemTraySupported()) iconifiableWindow.setExtendedState(Frame.NORMAL);
 		window.setVisible(true);
 		window.toFront();
 	}
@@ -142,26 +146,15 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		if (isSystemTraySupported()) {
 			window.setVisible(false);
 		} else {
-			windowAsFrame.setExtendedState(Frame.ICONIFIED);
+			iconifiableWindow.setExtendedState(Frame.ICONIFIED);
 		}
 	}
 
 	public void initBody() {
-		netLoginConnection = new NetLoginConnection(this);
-
 		loginDialog = new LoginDialog();
 		loginDialog.addLoginListener(new LoginDialog.LoginListener() {
 			public void login(String username, String password) {
-				netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
-				try {
-					if (p.getUseAltServer()) {
-						netLoginConnection.login(p.getAltServer(), username, password);
-					} else {
-						netLoginConnection.login(username, password);
-					}
-				} catch (IOException ex) {
-					showError(ex.getMessage());
-				}
+				NetLoginGUI.this.login(username, password);
 			}
 		});
 
@@ -179,6 +172,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		planTitle.setForeground(labelColor);
 		usageTitle.setForeground(labelColor);
 
+		connectButton = new JButton("Connect");
 		connectButton.setToolTipText("Login to NetAccount");
 		connectButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -278,7 +272,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		loginMenuItem = new JMenuItem("Login", 'l');
 		logoutMenuItem = new JMenuItem("Logout", 'l');
 		logoutMenuItem.setEnabled(false);
-		changePassMenuItem = new JMenuItem("Change Password", 'p');
+		JMenuItem changePassMenuItem = new JMenuItem("Change Password", 'p');
 		JMenuItem preferencesMenuItem = new JMenuItem("Preferences", 'r');
 		JMenuItem quitMenuItem = new JMenuItem("Exit", 'x');
 		JMenuItem aboutMenuItem = new JMenuItem("About", 'a');
