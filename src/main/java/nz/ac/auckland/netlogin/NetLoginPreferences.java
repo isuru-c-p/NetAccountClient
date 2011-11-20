@@ -2,9 +2,7 @@ package nz.ac.auckland.netlogin;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
 import java.util.prefs.Preferences;
 
 public class NetLoginPreferences {
