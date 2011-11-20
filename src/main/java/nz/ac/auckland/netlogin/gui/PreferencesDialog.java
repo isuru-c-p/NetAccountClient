@@ -1,24 +1,26 @@
 package nz.ac.auckland.netlogin.gui;
 
 import nz.ac.auckland.netlogin.NetLoginPreferences;
+import nz.ac.auckland.netlogin.util.SpringUtilities;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 public class PreferencesDialog {
 
 	private NetLoginPreferences preferences;
 	private JDialog dialog;
-//	private JTextField userText;
-//	private JTextField passwordText;
-//	private JButton loginButton;
-//	private JButton cancelButton;
-//	private JCheckBox rememberMeCheckbox;
-//	private JLabel userLabel;
-//	private JLabel passwordLabel;
+	private JButton okButton;
+	private JButton cancelButton;
+	private JCheckBox useDomainCheckbox;
+	private JLabel credentialSourceLabel;
+	private JComboBox credentialSourceCombo;
+	private JLabel serverLabel;
+	private JTextField serverText;
 
 	public PreferencesDialog(NetLoginPreferences preferences) {
 		this.preferences = preferences;
@@ -28,6 +30,7 @@ public class PreferencesDialog {
 	}
 
 	public void open() {
+		read();
 		dialog.setVisible(true);
 	}
 
@@ -40,72 +43,71 @@ public class PreferencesDialog {
 		close();
 	}
 
+	public void read() {
+		serverText.setText(preferences.getServer());
+		credentialSourceCombo.setSelectedItem(preferences.getCredentialSource());
+	}
+
 	public void save() {
-//				p.put("useStaticPingPort", useStaticPingPortCB.isSelected() ? "true" : "false");
-//				p.put("useAltServer", altServerCB.isSelected() ? "true" : "false");
-//				p.put("altServer", altServerTF.getText());
+		preferences.setServer(serverText.getText());
+		preferences.setCredentialSource((String)credentialSourceCombo.getSelectedItem());
+		preferences.savePreferences();
 	}
 
 	protected void createComponents() {
-		showPreferencesDialog();
+		dialog = new JDialog();
+		dialog.setResizable(false);
+		dialog.setTitle("NetLogin - Preferences");
+
+		okButton = new JButton("Ok");
+		okButton.setDefaultCapable(true);
+
+		cancelButton = new JButton("Cancel");
+
+		List<String> credentialSources = new ArrayList<String>();
+		credentialSources.add("Default");
+		credentialSources.add("Password");
+		credentialSources.add("SSPI");
+		credentialSources.add("GSSAPI");
+
+		credentialSourceLabel = new JLabel("Credentials:", JLabel.TRAILING);
+		credentialSourceCombo = new JComboBox(new Vector<String>(credentialSources));
+
+		serverLabel = new JLabel("Server:", JLabel.TRAILING);
+		serverText = new JTextField(20);
 	}
 
 	protected void registerEvents() {
+		okButton.addActionListener(EventHandler.create(ActionListener.class, this, "done"));
+		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
 	}
 
 	protected void layout() {
-	}
+		JPanel buttonPanel = new JPanel(new FlowLayout());
+		buttonPanel.add(okButton);
+		buttonPanel.add(cancelButton);
 
-	public void showPreferencesDialog() {
-		dialog = new JDialog();
-		dialog.setResizable(false);
+		JPanel formPanel = new JPanel(new SpringLayout());
+		formPanel.add(serverLabel);
+		formPanel.add(serverText);
+		formPanel.add(credentialSourceLabel);
+		formPanel.add(credentialSourceCombo);
+		SpringUtilities.makeCompactGrid(formPanel, 2, 2, 5, 5, 5, 5);
 
-		JPanel panel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-		panel.setLayout( gbl );
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.insets = new Insets( 1, 1, 1, 1 );
+		Box bodyPanel = Box.createVerticalBox();
+		bodyPanel.add(formPanel);
+		bodyPanel.add(buttonPanel);
 
-		final JCheckBox altServerCB = new JCheckBox("Alternate server", preferences.getUseAltServer());
-		final JTextField altServerTF = new JTextField(preferences.getAltServer());
-		final JCheckBox useStaticPingPortCB = new JCheckBox("Static ping port", preferences.getUseStaticPingPort());
-		
-		altServerCB.addChangeListener( new ChangeListener() {
-			public void stateChanged( ChangeEvent e ){
-				boolean useAltServer = ((JCheckBox)e.getSource()).isSelected();
-				altServerTF.setEnabled(useAltServer);
-			}
-		});
-        altServerTF.setEnabled(altServerCB.isSelected());
-		addExternal(panel, gbc, 0, 0, altServerCB, GridBagConstraints.NONE, GridBagConstraints.WEST);
-		gbc.weightx = 7.0;
-		addExternal( panel, gbc, 1, 0, altServerTF, GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST );
-		gbc.weightx = 1.0;
-		addExternal( panel, gbc, 0, 1, useStaticPingPortCB, GridBagConstraints.NONE, GridBagConstraints.WEST );
+		JPanel marginPanel = new JPanel(new BorderLayout());
+		marginPanel.add(bodyPanel, BorderLayout.CENTER);
+		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.NORTH);
+		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.SOUTH);
+		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.WEST);
+		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.EAST);
 
-		JButton okB = new JButton("OK");
-		okB.addActionListener(EventHandler.create(ActionListener.class, this, "done"));
-		addExternal( panel, gbc, 0, 2, okB, GridBagConstraints.NONE, GridBagConstraints.EAST );
-
-		JButton cancelB = new JButton("Cancel");
-		cancelB.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
-		addExternal( panel, gbc, 1, 2, cancelB, GridBagConstraints.NONE, GridBagConstraints.EAST );
-
-		dialog.setContentPane(panel);
-		dialog.setBounds(100, 100, 300, 130);
-		dialog.setTitle("NetLogin - Preferences");
-        dialog.setLocationRelativeTo(null);
-	}
-
-	private void addExternal( JPanel panel, GridBagConstraints constraints, int x, int y,
-		JComponent c, int fill, int anchor ) {
-		constraints.gridx = x;
-		constraints.gridy = y;
-		constraints.fill = fill;
-		constraints.anchor = anchor;
-		panel.add(c,constraints);
+		dialog.setContentPane(marginPanel);
+		dialog.pack();
+		dialog.setLocationRelativeTo(null);
 	}
 
 }

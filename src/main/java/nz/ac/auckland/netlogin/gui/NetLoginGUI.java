@@ -140,11 +140,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		
 		netLoginConnection.setUseStaticPingPort(preferences.getUseStaticPingPort());
 		try {
-			if (preferences.getUseAltServer()) {
-				netLoginConnection.login(preferences.getAltServer(), new PopulatedCredentialsCallback(upi, password));
-			} else {
-				netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, new PopulatedCredentialsCallback(upi, password));
-			}
+			netLoginConnection.login(preferences.getServer(), new PopulatedCredentialsCallback(upi, password));
 		} catch (IOException ex) {
 			showError(ex.getMessage());
 		}
