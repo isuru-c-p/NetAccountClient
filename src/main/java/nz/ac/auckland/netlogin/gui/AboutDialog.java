@@ -21,7 +21,7 @@ public class AboutDialog {
 		message.append("NetLogin Client\n");
 		if (version != null) message.append("Version: ").append(version).append("\n");
         message.append("\n");
-		message.append("© 2001 The University of Auckland.\n");
+		message.append("Copyright © 2001 The University of Auckland.\n");
         message.append("Released under terms of the GNU GPL.\n");
 
 		return message.toString();
