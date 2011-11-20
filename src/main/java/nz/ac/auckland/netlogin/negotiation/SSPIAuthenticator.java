@@ -13,6 +13,10 @@ import com.sun.jna.ptr.NativeLongByReference;
  */
 public class SSPIAuthenticator {
 
+    public String getName() {
+        return "SSPI (Windows)";
+    }
+
 	// http://code.dblock.org/jna-acquirecredentialshandle-initializesecuritycontext-and-acceptsecuritycontext-establishing-an-authenticated-connection
 	// obtaining a spn - http://msdn.microsoft.com/en-us/library/ff649429.aspx
 	public static void main(String[] args) {

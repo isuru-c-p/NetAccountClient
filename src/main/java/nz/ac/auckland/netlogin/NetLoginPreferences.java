@@ -10,8 +10,9 @@ public class NetLoginPreferences {
 	private static NetLoginPreferences instance;
 	private String server = "gate.ec.auckland.ac.nz";
 	private String credentialSource = "Default";
+    private String realm = "UOA.AUCKLAND.AC.NZ";
 
-	public static NetLoginPreferences getInstance() {
+    public static NetLoginPreferences getInstance() {
 		if (instance == null) instance = new NetLoginPreferences();
 		return instance;
 	}
@@ -81,4 +82,12 @@ public class NetLoginPreferences {
 		return true;
 	}
 
+    public String getRealm() {
+        return realm;
+    }
+
+    public void setRealm(String realm) {
+        this.realm = realm;
+    }
+    
 }

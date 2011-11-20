@@ -19,6 +19,8 @@ public class PreferencesDialog {
 	private JComboBox credentialSourceCombo;
 	private JLabel serverLabel;
 	private JTextField serverText;
+	private JLabel realmLabel;
+	private JTextField realmText;
 
 	public PreferencesDialog(NetLoginPreferences preferences) {
 		this.preferences = preferences;
@@ -44,11 +46,13 @@ public class PreferencesDialog {
 	public void read() {
 		serverText.setText(preferences.getServer());
 		credentialSourceCombo.setSelectedItem(preferences.getCredentialSource());
+        realmText.setText(preferences.getRealm());
 	}
 
 	public void save() {
 		preferences.setServer(serverText.getText());
 		preferences.setCredentialSource((String)credentialSourceCombo.getSelectedItem());
+        preferences.setRealm(realmText.getText());
 		preferences.savePreferences();
 	}
 
@@ -70,6 +74,9 @@ public class PreferencesDialog {
 
 		serverLabel = new JLabel("Server:", JLabel.TRAILING);
 		serverText = new JTextField(20);
+
+		realmLabel = new JLabel("Server realm:", JLabel.TRAILING);
+		realmText = new JTextField(20);
 	}
 
 	protected void registerEvents() {
@@ -87,7 +94,9 @@ public class PreferencesDialog {
 		formPanel.add(serverText);
 		formPanel.add(credentialSourceLabel);
 		formPanel.add(credentialSourceCombo);
-		SpringUtilities.makeCompactGrid(formPanel, 2, 2, 5, 5, 5, 5);
+		formPanel.add(realmLabel);
+		formPanel.add(realmText);
+		SpringUtilities.makeCompactGrid(formPanel, 3, 2, 5, 5, 5, 5);
 
 		Box bodyPanel = Box.createVerticalBox();
 		bodyPanel.add(formPanel);
