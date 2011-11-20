@@ -1,4 +1,4 @@
-package nz.ac.auckland.netlogin.negotiation.password;
+package nz.ac.auckland.netlogin.negotiation;
 
 import nz.ac.auckland.cs.des.C_Block;
 import nz.ac.auckland.cs.des.Key_schedule;

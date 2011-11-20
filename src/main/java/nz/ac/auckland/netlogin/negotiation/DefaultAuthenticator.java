@@ -3,7 +3,7 @@ package nz.ac.auckland.netlogin.negotiation;
 import javax.security.auth.login.CredentialNotFoundException;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 
 public class DefaultAuthenticator implements Authenticator {
 
@@ -14,7 +14,7 @@ public class DefaultAuthenticator implements Authenticator {
 	}
 
 	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
-		List<Authenticator> authenticators = AuthenticatorFactory.getInstance().getAuthenticators();
+		Collection<Authenticator> authenticators = AuthenticatorFactory.getInstance().getAuthenticators();
 		for(Authenticator delegate : authenticators) {
 			if (delegate == this) continue;
 

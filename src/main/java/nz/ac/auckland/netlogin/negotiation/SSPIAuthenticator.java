@@ -1,4 +1,4 @@
-package nz.ac.auckland.netlogin.negotiation.sspi;
+package nz.ac.auckland.netlogin.negotiation;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.Secur32;
@@ -7,11 +7,14 @@ import com.sun.jna.platform.win32.W32Errors;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.ptr.NativeLongByReference;
 
-public class SSPINegotiation {
+/**
+ * SSPI is a Microsoft protocol for authenticating between client and server.
+ * It is <a href="http://msdn.microsoft.com/en-us/library/aa380496(VS.85).aspx">interoperable with GSSAPI, subject to conditions</a>.
+ */
+public class SSPIAuthenticator {
 
 	// http://code.dblock.org/jna-acquirecredentialshandle-initializesecuritycontext-and-acceptsecuritycontext-establishing-an-authenticated-connection
 	// obtaining a spn - http://msdn.microsoft.com/en-us/library/ff649429.aspx
-	// interoperability with gssapi - http://msdn.microsoft.com/en-us/library/aa380496(VS.85).aspx
 	public static void main(String[] args) {
 		if (args.length < 1) {
 			System.out.println("Please supply the principal to connect to, for example netlogin/gate.ec.auckland.ac.nz@AD.EC.AUCKLAND.AC.NZ");

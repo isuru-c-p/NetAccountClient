@@ -1,13 +1,12 @@
 package nz.ac.auckland.netlogin.gui;
 
 import nz.ac.auckland.netlogin.NetLoginPreferences;
+import nz.ac.auckland.netlogin.negotiation.AuthenticatorFactory;
 import nz.ac.auckland.netlogin.util.SpringUtilities;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 
 public class PreferencesDialog {
@@ -64,14 +63,10 @@ public class PreferencesDialog {
 
 		cancelButton = new JButton("Cancel");
 
-		List<String> credentialSources = new ArrayList<String>();
-		credentialSources.add("Default");
-		credentialSources.add("Password");
-		credentialSources.add("SSPI");
-		credentialSources.add("GSSAPI");
+        Vector<String> credentialSources = new Vector<String>(AuthenticatorFactory.getInstance().getNames());
 
 		credentialSourceLabel = new JLabel("Credentials:", JLabel.TRAILING);
-		credentialSourceCombo = new JComboBox(new Vector<String>(credentialSources));
+		credentialSourceCombo = new JComboBox(credentialSources);
 
 		serverLabel = new JLabel("Server:", JLabel.TRAILING);
 		serverText = new JTextField(20);
