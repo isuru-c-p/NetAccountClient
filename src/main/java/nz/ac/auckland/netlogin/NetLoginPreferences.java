@@ -9,33 +9,22 @@ import java.util.prefs.Preferences;
 
 public class NetLoginPreferences {
 	
-	private String server;
-	private String credentialSource;
+	private String server = "gate.ec.auckland.ac.nz";
+	private String credentialSource = "Default";
 
 	public NetLoginPreferences() {
 		loadPreferences();
 	}
 
-	public Properties defaultPreferences() {
-		try {
-			Properties defaults = new Properties();
-			defaults.load(getClass().getResourceAsStream("/netlogin.properties"));
-			return defaults;
-		} catch (IOException e) {
-			// treat this as a fatal error
-			throw new RuntimeException("Unable to load default preferences: " + e.getMessage());
-		}
-	}
-
 	public void loadPreferences() {
-		Properties defaults = defaultPreferences();
 		Preferences preferences = Preferences.userNodeForPackage(NetLogin.class);
 		for(PropertyDescriptor desc : PropertyUtils.getPropertyDescriptors(this)) {
 			if (desc.getReadMethod() == null || desc.getWriteMethod() == null) continue;
 
 			String name = desc.getName();
-			String defaultValue = defaults.getProperty(name);
-			String value = preferences.get(name, defaultValue);
+			String value = preferences.get(name, null);
+			if (value == null) continue;
+
 			try {
 				PropertyUtils.setProperty(this, name, value);
 			} catch (IllegalAccessException e) {
