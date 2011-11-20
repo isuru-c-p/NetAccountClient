@@ -16,7 +16,6 @@ public class PreferencesDialog {
 	private JDialog dialog;
 	private JButton okButton;
 	private JButton cancelButton;
-	private JCheckBox useDomainCheckbox;
 	private JLabel credentialSourceLabel;
 	private JComboBox credentialSourceCombo;
 	private JLabel serverLabel;
@@ -56,6 +55,7 @@ public class PreferencesDialog {
 
 	protected void createComponents() {
 		dialog = new JDialog();
+		dialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
 		dialog.setResizable(false);
 		dialog.setTitle("NetLogin - Preferences");
 

@@ -81,7 +81,7 @@ public class LoginDialog {
 	protected void createComponents() {
 		dialog = new JDialog();
 		dialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
-		dialog.setTitle("Login");
+		dialog.setTitle("NetLogin - Login");
 		dialog.setVisible(false);
 		dialog.setResizable(false);
 
