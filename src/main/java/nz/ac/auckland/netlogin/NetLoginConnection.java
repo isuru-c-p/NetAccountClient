@@ -1,8 +1,17 @@
-import java.io.*;
-import java.net.*;
-import java.lang.*;
-import java.util.*;
-import nz.ac.auckland.cs.des.*;
+package nz.ac.auckland.netlogin;
+
+import nz.ac.auckland.cs.des.C_Block;
+import nz.ac.auckland.cs.des.Key_schedule;
+import nz.ac.auckland.cs.des.desDataInputStream;
+import nz.ac.auckland.cs.des.desDataOutputStream;
+import nz.ac.auckland.netlogin.*;
+import nz.ac.auckland.netlogin.negotiation.Authenticator;
+import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
+import nz.ac.auckland.netlogin.negotiation.password.PasswordAuthenticator;
+import javax.security.auth.login.LoginException;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 
 public class NetLoginConnection {
 	
@@ -39,9 +48,8 @@ public class NetLoginConnection {
 	final int BUFSIZ	= 1024;
 	byte InBuffer[]		= new byte[ BUFSIZ ];
 
-	Random r = new Random();
-	int random1 = 0;
-	int random2 = 0;
+	int clientNonce;
+	int serverNonce;
 	int Sequence_Number = 0;
 
 	Key_schedule schedule = null;				//set up encryption key to the users passwd
@@ -77,14 +85,15 @@ public class NetLoginConnection {
 	int endPeak; 					//TIME OF DAY IN MINUTES
 	int lastModDate; 				//DATESTAMP FROM THE CHARGES FILE
 
+	private Authenticator authenticator = new PasswordAuthenticator();
+
 	private PingListener netLogin;
 
 	public NetLoginConnection( PingListener netLogin ){
 		this.netLogin = netLogin;
 	}
 
-	public void login( String server, String username, String password ) throws IOException {
-		this.username = username;
+	public void login(String server, CredentialsCallback callback) throws IOException {
 		pinger = new PingSender( server, PINGD_PORT, netLogin );
 		if( useStaticPingPort ){
 			ping_receiver = new PingRespHandler( netLogin, pinger, pinger.getSocket() );
@@ -93,9 +102,11 @@ public class NetLoginConnection {
 			ping_receiver = new PingRespHandler( netLogin, pinger );
 			Response_Port = ping_receiver.getLocalPort();
 		}
-		authenticate( server, username, password );
-		pinger.prepare( schedule, Auth_Ref, random2 + 2, Sequence_Number );
-		ping_receiver.prepare( random1 + 3, Sequence_Number, schedule );
+
+		authenticate( server, callback );
+		
+		pinger.prepare( schedule, Auth_Ref, serverNonce + 2, Sequence_Number );
+		ping_receiver.prepare( clientNonce + 3, Sequence_Number, schedule );
 		ping_receiver.start();
 		pinger.start();
 		
@@ -113,48 +124,40 @@ public class NetLoginConnection {
 			ping_receiver.end();
 	}
 
-	public void sendMessage( String user, String message ){
-		if( pinger != null )
-			pinger.sendMessage( user, username +": "+ message );
-	}
-
-	private void authenticate( String server, String loginS, String PasswdS ) throws IOException, UnknownHostException {
+	private void authenticate(String server, CredentialsCallback callback) throws IOException {
 		try {
 			NetGuardian_stream = new SPP_Packet( server, AUTHD_PORT );
-			schedule = new Key_schedule( PasswdS );
-			sendPacket_1( loginS );
+
+			sendPacket_1(callback);
 			RespPacket_1();
 
 			SendSecondPacket();
 			ReadSecondResponsePacket();
-		} catch ( UnknownHostException e ) {
+
+		} catch (IOException e) {
 			throw e;
-		} catch ( IOException e ) {
-			throw e;
+		} catch (LoginException e) {
+			throw new IOException(e);
 		} finally {
 			NetGuardian_stream.close();
 			NetGuardian_stream = null;
 		}
 	}
 
-	private void sendPacket_1( String loginS ) throws IOException {
-		desDataOutputStream packit = new desDataOutputStream( 128 );
-		desDataOutputStream des_out = new desDataOutputStream( 128 );
-		byte EncryptedOutBuffer[];
+	private void sendPacket_1(CredentialsCallback callback) throws IOException, LoginException {
+		Authenticator.AuthenticationRequest request = authenticator.startAuthentication(callback);
+		this.username = request.getUsername();
 
-		random1 = r.nextInt();			// get a random number for using as a token
-		des_out.writeInt( random1 );
-		EncryptedOutBuffer = des_out.des_encrypt( schedule );  	//encrypt buffer
+		desDataOutputStream packet = new desDataOutputStream(128);
+		packet.writeInt(clienttype);
+		packet.writeInt(clientversion);
+		packet.writeBytes(request.getUsername(), UNAMESIZ); // truncates or pads so always UNAMESIZ
+		packet.write(request.getPayload());
 
-		//These can throw IOException
-		packit.writeInt( clienttype );
-		packit.writeInt( clientversion );
-		packit.writeBytes( loginS, UNAMESIZ ); // truncates or pads so always UNAMESIZ
-		packit.write( EncryptedOutBuffer, 0, EncryptedOutBuffer.length );
-		NetGuardian_stream.SendPacket( AUTH_REQ_PACKET, VERSION, packit.toByteArray() );
+		NetGuardian_stream.SendPacket(AUTH_REQ_PACKET, VERSION, packet.toByteArray());
 	}
 
-	private void RespPacket_1() throws IOException {
+	private void RespPacket_1() throws IOException, LoginException {
 		desDataInputStream des_in;
 		DataInputStream	unencrypted_data_input_Stream = null;
 		int random_returned;
@@ -208,17 +211,14 @@ public class NetLoginConnection {
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 4 ) );
 		Client_Rel_Version = unencrypted_data_input_Stream.readInt();
 
-		des_in = new desDataInputStream( InBuffer, 4, NetGuardian_stream.Last_Read_length, schedule );
+		byte[] payload = new byte[NetGuardian_stream.Last_Read_length - 4];
+		System.arraycopy(InBuffer, 4, payload, 0, payload.length);
 
-		random_returned = des_in.readInt();
-		if ( random1 + 1 != random_returned ) {	// Other end doesn't agree on the current passwd
-			throw new IOException( "Incorrect password" );
-			//throw new IOException( "RespPacket_1: Random Keys don't match " +
-			//		uHex.toHex( random1 + 1 ) + " != " + uHex.toHex( random_returned ) );
-		}
+		Authenticator.LoginComplete session = authenticator.validateResponse(payload);
 
-		random2 = des_in.readInt();   //We need to send this one back in the next packet
-		schedule = new Key_schedule( des_in.readC_Block() );  //Get the new C_Block key and make a schedule
+		clientNonce = session.getClientNonce();
+		serverNonce = session.getServerNonce();
+		schedule = new Key_schedule(session.getSessionKey());
 	}
 
 	private void SendSecondPacket() throws IOException {
@@ -226,7 +226,7 @@ public class NetLoginConnection {
 		byte EncryptedOutBuffer[];
 
 		cmd_data = ( short ) Response_Port; 	//Port we want pings responses on
-		des_out.writeInt( random2 + 1 );   		//Can throw IOException
+		des_out.writeInt( serverNonce + 1 );   		//Can throw IOException
 		des_out.writeInt( clientcommand );   	//Can throw IOException
 		des_out.writeInt( cmd_data_length ); 	//Can throw IOException
 		des_out.writeShort( cmd_data );			//Can throw IOException
@@ -257,7 +257,7 @@ public class NetLoginConnection {
 
 		if ( NetGuardian_stream.Last_Read_length < ( 10 * 4 ) )
 			throw new IOException( "ReadSecondResponsePacket: AUTH_CONFIRM_RESPONSE_PACKET too short" );
-		//too short for random2, ack and string
+		//too short for serverNonce, ack and string
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 28 ) );
 		onPlan = unencrypted_data_input_Stream.readInt();
@@ -272,7 +272,7 @@ public class NetLoginConnection {
 		des_in = new desDataInputStream( InBuffer , 28, NetGuardian_stream.Last_Read_length, schedule );
 
 		random_returned = des_in.readInt();
-		if ( random1 + 2 != random_returned ) {	// Other end doesn't agree on the current passwd
+		if ( clientNonce + 2 != random_returned ) {	// Other end doesn't agree on the current passwd
 			throw new IOException( "Incorrect password" );
 		}
 

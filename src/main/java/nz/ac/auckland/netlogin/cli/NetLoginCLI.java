@@ -1,15 +1,33 @@
+package nz.ac.auckland.netlogin.cli;
 
-public class NetLoginCMD implements PingListener {
+import nz.ac.auckland.netlogin.NetLoginConnection;
+import nz.ac.auckland.netlogin.PingListener;
+import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
+import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
+
+public class NetLoginCLI implements PingListener {
 		
 	private String upi;
-	private NetLoginConnection netLoginConnection = null;
+	private NetLoginConnection netLoginConnection;
 	private boolean displayStatus = false;
 
-	public NetLoginCMD(String upi, String password) {
+	public NetLoginCLI(String upi, String password) {
 		this.upi = upi;
+
+		CredentialsCallback callback;
+		if (password == null) {
+			callback = new ConsolePasswordField(upi);
+		} else {
+			callback = new PopulatedCredentialsCallback(upi, password);
+		}
+		
+		authenticate(callback);
+	}
+
+	public void authenticate(CredentialsCallback callback) {
 		try {
 			netLoginConnection = new NetLoginConnection(this);
-			netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, upi, password);
+			netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, callback);
 		} catch(Exception e) {
 			System.out.println(e);
 		}

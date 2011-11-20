@@ -1,20 +1,17 @@
-import nz.ac.auckland.netlogin.gui.AboutDialog;
-import nz.ac.auckland.netlogin.gui.LoginDialog;
+package nz.ac.auckland.netlogin.gui;
 
-import java.awt.*;
-import java.beans.EventHandler;
-import java.io.*;
-import java.awt.event.*;
+import nz.ac.auckland.netlogin.NetLoginConnection;
+import nz.ac.auckland.netlogin.NetLoginPreferences;
+import nz.ac.auckland.netlogin.PingListener;
+import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.MouseInputAdapter;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.EventHandler;
+import java.io.IOException;
 import java.lang.reflect.Method;
-import java.awt.Window;
-import static java.awt.GridBagConstraints.VERTICAL;
-import static java.awt.GridBagConstraints.HORIZONTAL;
-import static java.awt.GridBagConstraints.EAST;
-import static java.awt.GridBagConstraints.WEST;
-import static java.awt.GridBagConstraints.CENTER;
-import static java.awt.GridBagConstraints.NONE;
+import static java.awt.GridBagConstraints.*;
 
 public class NetLoginGUI extends JPanel implements PingListener {
 
@@ -122,9 +119,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
 		try {
 			if (p.getUseAltServer()) {
-				netLoginConnection.login(p.getAltServer(), upi, password);
+				netLoginConnection.login(p.getAltServer(), new PopulatedCredentialsCallback(upi, password));
 			} else {
-				netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, upi, password);
+				netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, new PopulatedCredentialsCallback(upi, password));
 			}
 		} catch (IOException ex) {
 			showError(ex.getMessage());

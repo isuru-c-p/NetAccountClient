@@ -1,7 +1,11 @@
-import java.io.*;
-import java.util.Arrays;
+package nz.ac.auckland.netlogin;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import nz.ac.auckland.netlogin.cli.NetLoginCLI;
+import nz.ac.auckland.netlogin.gui.NetLoginGUI;
+import java.io.IOException;
+import java.util.Arrays;
 
 /*
  * NetLogin
@@ -35,7 +39,7 @@ public class NetLogin {
 					System.exit(0);
 				}
 			
-				// CMD Line with upi and password
+				// CMD Line with upi and retrievePassword
 				if (options.has("u")) {
 					String password = null;
 					String upi= options.valueOf("u").toString();
@@ -47,31 +51,19 @@ public class NetLogin {
 					
 					if (options.has("p")) {
 						try {
-							password= options.valueOf("p").toString();
-						} catch(Exception e) {
-							password=null;
+							password = options.valueOf("p").toString();
+							if (password != null && password.length() == 0) password = null;
+						} catch (Exception e) {
+							password = null;
 						}
 					}
-					
-					if (password == null || password.length() == 0) {
-						try {
-							password = new String(ConsolePasswordField.getPassword(System.in, "Enter password: "));
-						} catch(IOException ioe) {
-							ioe.printStackTrace();
-						}
-					}
-					
-					if(password == null) {
-						 System.err.println("No password entered");
-						 System.exit(0);
-					}
-					
+										
 					if (options.has("g")) {
 						// still use GUI interface
-						new NetLoginGUI(upi,password);
+						new NetLoginGUI(upi, password);
 					} else {
 						// pure command line with console
-						new NetLoginCMD(upi,password);
+						new NetLoginCLI(upi ,password);
 					}
 				}
 				

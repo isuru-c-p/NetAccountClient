@@ -20,7 +20,7 @@ public class AboutDialog {
 	public String getMessage() {
 		StringBuilder message = new StringBuilder();
 
-		message.append("NetLogin Client");
+		message.append("nz.ac.auckland.netlogin.NetLogin Client");
 		if (version != null) message.append(" Version ").append(version);
 		message.append("\n");
 		message.append("Copyright(C) 2001-2011 The University of Auckland.\n");

@@ -1,8 +1,15 @@
-import java.io.*;
-import java.net.*;
-import java.lang.*;
+package nz.ac.auckland.netlogin;
 
-import nz.ac.auckland.cs.des.*;
+import nz.ac.auckland.cs.des.Key_schedule;
+import nz.ac.auckland.cs.des.desDataOutputStream;
+import java.io.IOException;
+import java.lang.Exception;
+import java.lang.InterruptedException;
+import java.lang.String;
+import java.lang.Thread;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 public class PingSender extends Thread {
 
@@ -88,7 +95,7 @@ public class PingSender extends Thread {
 			sendPacket = new DatagramPacket(messageBytes, messageBytes.length, host, port);
 			s.send(sendPacket);
 		} catch (IOException e) {
-			System.out.println( "PingSender: Error sending message" );
+			System.out.println( "nz.ac.auckland.netlogin.PingSender: Error sending message" );
 		}
 	}
 
@@ -116,7 +123,7 @@ public class PingSender extends Thread {
 				outstandingPings++;
 				missedPings = 0;
 			} catch (IOException e) {
-				System.out.println("PingSender: Error sending ping packet");
+				System.out.println("nz.ac.auckland.netlogin.PingSender: Error sending ping packet");
 				missedPings++; // Ignore it at least 10 times in a row
 			}
 

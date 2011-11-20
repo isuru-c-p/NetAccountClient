@@ -1,3 +1,5 @@
+package nz.ac.auckland.netlogin;
+
 public class Errors {
 
 	// result codes from command requests

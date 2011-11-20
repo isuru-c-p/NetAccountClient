@@ -1,3 +1,5 @@
+package nz.ac.auckland.netlogin;
+
 public interface PingListener {
 
 	public void connected(int ipUsage, int userPlanFlags);

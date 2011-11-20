@@ -1,6 +1,11 @@
-import java.io.*;
-import java.net.*;
-import nz.ac.auckland.cs.des.*;
+package nz.ac.auckland.netlogin;
+
+import nz.ac.auckland.cs.des.Key_schedule;
+import nz.ac.auckland.cs.des.desDataInputStream;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 
 public class PingRespHandler extends Thread {
 	

@@ -61,10 +61,10 @@ public class LoginDialog {
 	}
 
 	protected void registerEvents() {
-		// clear the password dialog when the window closes
+		// clear the retrievePassword dialog when the window closes
 		dialog.addWindowListener(EventHandler.create(WindowListener.class, this, "clearPassword"));
 
-		// enable the login button if the username and password are supplied
+		// enable the login button if the username and retrievePassword are supplied
 		CaretListener detailsValidator = EventHandler.create(CaretListener.class, this, "validateDetails");
 		userText.addCaretListener(detailsValidator);
 		passwordText.addCaretListener(detailsValidator);

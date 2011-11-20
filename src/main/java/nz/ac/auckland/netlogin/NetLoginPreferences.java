@@ -1,8 +1,12 @@
-import java.util.*;
-import java.awt.*;
+package nz.ac.auckland.netlogin;
+
 import javax.swing.*;
-import java.awt.event.*;
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Properties;
 
 public class NetLoginPreferences {
 	

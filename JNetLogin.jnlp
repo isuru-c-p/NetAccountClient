@@ -26,7 +26,7 @@
     <jar href="signed_JNetLogin.jar"/>
 </resources>
 
-<application-desc main-class="NetLogin"/>
+<application-desc main-class="nz.ac.auckland.netlogin.NetLogin"/>
 
 </jnlp>
 

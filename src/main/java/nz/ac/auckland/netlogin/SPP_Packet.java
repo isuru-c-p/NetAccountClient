@@ -1,16 +1,9 @@
-import java.awt.*;
-import java.applet.Applet;
+package nz.ac.auckland.netlogin;
+
 import java.io.*;
 import java.net.*;
-import java.lang.*;
-import java.util.*;
-import nz.ac.auckland.cs.des.*;
 
-public class SPP_Packet extends Object
-{
-	static final int PASSWD_SERVICE = 302; 				//For changing passwords
-	static final String HOST = "cs20.cs.auckland.ac.nz";	//For changing passwords
-
+public class SPP_Packet {
 
 	static final int RSLT_OK							=	 0;
 	static final int RSLT_COMMUNICATION_FAILUE			=	-1;
@@ -28,27 +21,16 @@ public class SPP_Packet extends Object
 	DataOutputStream os = null;
 	DataInputStream is = null;
 	int Last_Read_length = 0;
-	
-	 
-    public SPP_Packet(String host, int port) //create the socket and connect to the host.
-    throws IOException, UnknownHostException
-    {
+
+	// create the socket and connect to the host.
+    public SPP_Packet(String host, int port) throws IOException {
 		passwdSocket = new Socket(host, port);
 		os = new DataOutputStream(new BufferedOutputStream(passwdSocket.getOutputStream()));
 		is = new DataInputStream(new BufferedInputStream(passwdSocket.getInputStream()));
     }
-    
-    public SPP_Packet() //create the socket and connect to the host.
-    throws IOException, UnknownHostException
-    {
-		passwdSocket = new Socket(HOST, PASSWD_SERVICE);
-		os = new DataOutputStream(new BufferedOutputStream(passwdSocket.getOutputStream()));
-		is = new DataInputStream(new BufferedInputStream(passwdSocket.getInputStream()));
-    }
-    
-    public void SendPacket(int PacketType, int version, byte buffer[]) //Send Buffer to the distant host
-	throws IOException 
-    {    
+
+	// Send Buffer to the distant host
+	public void SendPacket(int PacketType, int version, byte buffer[]) throws IOException {
     	try { os.writeInt(buffer.length + 8);} //Data field Length + 8 bytes for the packettype and version
     	 catch (IOException e) { throw new IOException("SendPacket: 1"+ e.getMessage());	}	
     	try { os.writeInt(PacketType);	}		//Packet Typw
@@ -61,14 +43,14 @@ public class SPP_Packet extends Object
      	 catch (IOException e) { throw new IOException("SendPacket: 5"+ e.getMessage());	}	
    }
 
-    public ReadResult  ReadPacket(int PacketType, int version, byte buffer[]) //Read a buffer from the distant host
-	throws IOException
-    {
-    int i = 0;
-    int got = 0;
-	int RPacketType;
-	int Rversion;
-	int Result = RSLT_OK;
+	// Read a buffer from the distant host
+    public ReadResult ReadPacket(int PacketType, int version, byte buffer[]) throws IOException {
+
+		int i = 0;
+		int got = 0;
+		int RPacketType;
+		int Rversion;
+		int Result = RSLT_OK;
     
 		Last_Read_length = is.readInt() - 8;	//Read the data length field + the 8 bytes for the packettype and version
 		if(Last_Read_length < 0)
@@ -78,22 +60,20 @@ public class SPP_Packet extends Object
 			throw new IOException("ReadPacket 2: data length " + Last_Read_length + " > buffer length");
 			
 		RPacketType = is.readInt();		//Read the Pack type Field
-		if(RPacketType != PacketType)
+		if(RPacketType != PacketType) {
 			Result = RSLT_BAD_PACKET_TYPE;
+		}
 
 		Rversion = is.readInt();		//Read the Version field
 		
-		if(Result == RSLT_OK && Rversion != version)
+		if(Result == RSLT_OK && Rversion != version) {
 			Result = Rversion;
+		}
 			
-		while( i < Last_Read_length && got != -1) //we loop here until we get all the data
-		{
-			try
-			{
+		while(i < Last_Read_length && got != -1) { //we loop here until we get all the data
+			try {
     			got = is.read(buffer, i, Last_Read_length-i);
-    		}
-    		catch(IOException e)
-    		{
+    		} catch(IOException e) {
     			throw new IOException("ReadPacket 5: " + e.getMessage());
     		}
     		i += got;
@@ -102,11 +82,8 @@ public class SPP_Packet extends Object
 	    return new ReadResult(Result, RPacketType, Rversion );
     }
     
-    public void close()
-    throws IOException
-    {
-	    if(passwdSocket != null)
-	    {
+    public void close() throws IOException {
+	    if(passwdSocket != null) {
 		    passwdSocket.close();
 			passwdSocket = null;
 		}
@@ -114,16 +91,13 @@ public class SPP_Packet extends Object
 		is = null;
     }
     
-	public void finalize() //Make sure the connection is closed when we are finished.
-	{
-		try 
-		{
+	public void finalize() throws Throwable {
+		try {
 			close();
-		} 
-		catch (Exception e) 
-		{
-		    System.err.println("finalize:  " + e);
+		} catch (Exception e) {
+		    System.err.println("Failed to close connection: " + e.getMessage());
 		}
+		super.finalize();
 	}
 		    
 }

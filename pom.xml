@@ -30,6 +30,12 @@
 			<artifactId>jna</artifactId>
 			<version>3.3.0</version>
 		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>3.3.0</version>
+			<classifier>platform</classifier>
+		</dependency>
 	</dependencies>
 
 	<repositories>
@@ -78,7 +84,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>NetLogin</mainClass>
+							<mainClass>nz.ac.auckland.netlogin.NetLogin</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

@@ -1,3 +1,5 @@
+package nz.ac.auckland.netlogin;
+
 import java.lang.*;
 
 class ReadResult extends Object

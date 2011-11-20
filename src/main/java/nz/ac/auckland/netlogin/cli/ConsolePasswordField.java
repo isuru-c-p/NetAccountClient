@@ -1,19 +1,47 @@
+package nz.ac.auckland.netlogin.cli;
+
+import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import java.io.*;
 import java.util.*;
 
 /**
  * This class prompts the user for a password and attempts to mask input with "*"
  */
+public class ConsolePasswordField implements CredentialsCallback {
 
-public class ConsolePasswordField {
+	private String username;
+	private String password;
+
+	public ConsolePasswordField(String username) {
+		this.username = username;
+	}
+
+	public boolean requestCredentials() {
+		try {
+			char[] passwordChars = requestPassword(System.in, "Enter password: ");
+			this.password = new String(passwordChars);
+			return !password.isEmpty();
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public String retrievePassword() {
+		String password = this.password;
+		this.password = null;
+		return password;
+	}
 
   /**
-   *@param input stream to be used (e.g. System.in)
+   *@param in stream to be used (e.g. System.in)
    *@param prompt The prompt to display to the user.
-   *@return The password as entered by the user.
+   *@return The retrievePassword as entered by the user.
    */
-
-   public static final char[] getPassword(InputStream in, String prompt) throws IOException {
+   public char[] requestPassword(InputStream in, String prompt) throws IOException {
       MaskingThread maskingthread = new MaskingThread(prompt);
       Thread thread = new Thread(maskingthread);
       thread.start();
@@ -66,12 +94,12 @@ public class ConsolePasswordField {
       Arrays.fill(buf, ' ');
       return ret;
    }
+
 }
 
 /**
  * This class attempts to erase characters echoed to the console.
  */
-
 class MaskingThread extends Thread {
    private volatile boolean stop;
    private char echochar = '*';

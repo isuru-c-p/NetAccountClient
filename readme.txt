@@ -6,20 +6,20 @@ AUTH_REQ_PACKET
 + client version :: int
 + upi :: byte[]
 + encrypted payload using new schedule based on password
-	+ seed :: int
+	+ clientNonce :: int
 
 packet 2: server -> client
 AUTH_REQ_RESPONSE_PACKET
 + client rel version :: int
 + encrypted payload continuing schedule based on password
-	+ seed + 1 :: int
-	+ sessionSeed :: int
+	+ clientNonce + 1 :: int
+	+ serverNonce :: int
 	+ session :: C_Block
 
 packet 3: client -> server
 AUTH_CONFIRM_PACKET
 + encrypted payload using new schedule based on session
-	+ sessionSeed + 1 :: int
+	+ serverNonce + 1 :: int
 	+ client command :: int = 3 / CMD_GET_USER_BALANCES_NO_BLOCK
 	+ client command data length :: int = 2
 	+ client command data :: short = ping port
@@ -34,7 +34,7 @@ AUTH_CONFIRM_RESPONSE_PACKET
 + endPeak :: int
 + lastModDate :: int
 + encrypted payload continuing schedule based on session
-	+ seed + 2 :: int
+	+ clientNonce + 2 :: int
 	+ ack :: int
 	+ command data length :: int
 	+ auth ref :: int
