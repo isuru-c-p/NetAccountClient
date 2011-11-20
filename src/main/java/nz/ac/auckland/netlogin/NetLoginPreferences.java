@@ -7,10 +7,16 @@ import java.util.prefs.Preferences;
 
 public class NetLoginPreferences {
 	
+	private static NetLoginPreferences instance;
 	private String server = "gate.ec.auckland.ac.nz";
 	private String credentialSource = "Default";
 
-	public NetLoginPreferences() {
+	public static NetLoginPreferences getInstance() {
+		if (instance == null) instance = new NetLoginPreferences();
+		return instance;
+	}
+
+	private NetLoginPreferences() {
 		loadPreferences();
 	}
 

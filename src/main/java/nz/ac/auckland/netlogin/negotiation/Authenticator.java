@@ -6,6 +6,8 @@ import java.io.IOException;
 
 public interface Authenticator {
 
+	public String getName();
+
 	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException;
 
 	public LoginComplete validateResponse(byte[] serverResponse) throws LoginException, IOException;

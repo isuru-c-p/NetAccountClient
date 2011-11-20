@@ -63,7 +63,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	private void initialize() {
-		preferences = new NetLoginPreferences();
+		preferences = NetLoginPreferences.getInstance();
 		netLoginConnection = new NetLoginConnection(this);
 
 		loadLookAndFeel();

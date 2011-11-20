@@ -17,6 +17,10 @@ public class PasswordAuthenticator implements Authenticator {
 	private Key_schedule schedule;
 	private int clientNonce;
 
+	public String getName() {
+		return "Password";
+	}
+
 	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
 		if (!callback.requestCredentials()) throw new LoginException();
 		String username = callback.getUsername();
