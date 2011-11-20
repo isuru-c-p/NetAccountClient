@@ -108,8 +108,9 @@ public class NetLoginConnection {
 		ping_receiver.prepare( clientNonce + 3, Sequence_Number, schedule );
 		ping_receiver.start();
 		pinger.start();
-		
-		netLogin.connected(username, ipUsage, onPlan);
+
+        NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
+		netLogin.connected(username, ipUsage, plan);
 	}
 
 	public void setUseStaticPingPort( boolean b ){

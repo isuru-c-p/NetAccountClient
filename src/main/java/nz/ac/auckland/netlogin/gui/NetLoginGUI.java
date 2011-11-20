@@ -1,6 +1,7 @@
 package nz.ac.auckland.netlogin.gui;
 
 import nz.ac.auckland.netlogin.NetLoginConnection;
+import nz.ac.auckland.netlogin.NetLoginPlan;
 import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
@@ -203,7 +204,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		logoutMenuItem.setEnabled(false);
 	}
 
-	public void connected(String username, int ipUsage, int planFlags) {
+	public void connected(String username, int ipUsage, NetLoginPlan plan) {
 		this.connected = true;
 		statusLabel.setText(username);
 		connectButton.setToolTipText("Disconnect from NetAccount");
@@ -211,7 +212,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		loginMenuItem.setEnabled(false);
 		logoutMenuItem.setEnabled(true);
 
-		update(ipUsage, planFlags, null);
+		update(ipUsage, plan, null);
 	}
 
 	public void disconnected() {
@@ -219,35 +220,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		updateTrayLabel();
 	}
 
-	public void update(int ipUsage, int planFlags, String message) {
+	public void update(int ipUsage, NetLoginPlan plan, String message) {
 		float ipUsageMb = (float)(Math.round((ipUsage / 1024.0) * 100)) / 100;
 		usageLabel.setText("" + ipUsageMb + "MBs");
-
-		planFlags = planFlags & 0x0F000000;
-		switch (planFlags) {
-		case 0x01000000: // STATUS_UNLIMITED: =>Staff
-			planName = "Staff";
-			break;
-		case 0x02000000: // STATUS_SPONSORED:
-			planName = "Sponsored";
-			break;
-		case 0x03000000: // STATUS_PREMIUM: =>undergraduate
-			planName = "Undergraduate";
-			break;
-		case 0x04000000: // STATUS_STANDARD: => exceeded
-			planName = "ExceededAllowance";
-			break;
-		case 0x05000000: // STATUS_NOACCESS:
-			planName = "NoAccess";
-			break;
-		case 0x06000000: // STATUS_PostGraduate:
-			planName = "Postgraduate";
-			break;
-		default:
-			planName = "";
-		}
-		
-		planLabel.setText(planName);
+		planLabel.setText(plan.toString());
 		updateTrayLabel();
 	}
 

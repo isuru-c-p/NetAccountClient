@@ -119,7 +119,9 @@ public class PingRespHandler extends Thread {
 				message = new byte[message_length];
 				des_in.read(message);
 
-				netLogin.update(ipUsage, onPlan, new String(message));
+                NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
+
+				netLogin.update(ipUsage, plan, new String(message));
 
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
