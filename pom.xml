@@ -90,6 +90,8 @@
 					<archive>
 						<manifest>
 							<mainClass>nz.ac.auckland.netlogin.NetLogin</mainClass>
+                            <packageName>nz.ac.auckland.netlogin</packageName>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 					</archive>
 				</configuration>

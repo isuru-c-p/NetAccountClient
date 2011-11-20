@@ -1,9 +1,7 @@
 package nz.ac.auckland.netlogin.gui;
 
+import nz.ac.auckland.netlogin.NetLogin;
 import javax.swing.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.Manifest;
 
 public class AboutDialog {
 
@@ -20,25 +18,19 @@ public class AboutDialog {
 	public String getMessage() {
 		StringBuilder message = new StringBuilder();
 
-		message.append("nz.ac.auckland.netlogin.NetLogin Client");
-		if (version != null) message.append(" Version ").append(version);
-		message.append("\n");
-		message.append("Copyright(C) 2001-2011 The University of Auckland.\n");
-		message.append("Released under terms of the GNU GPL.\n");
+		message.append("NetLogin Client\n");
+		if (version != null) message.append("Version: ").append(version).append("\n");
+        message.append("\n");
+		message.append("© 2001 The University of Auckland.\n");
+        message.append("Released under terms of the GNU GPL.\n");
 
 		return message.toString();
 	}
 
 	public String readVersion() {
-		InputStream manifestIn = getClass().getResourceAsStream("/META-INF/MANIFEST.MF");
-		if (manifestIn == null) return null;
-		try {
-			Manifest manifest = new Manifest(manifestIn);
-			return manifest.getMainAttributes().getValue("Implementation-Version");
-		} catch (IOException e) {
-			// if we cannot read the version, proceed without
-			return null;
-		}
+        Package pkg = NetLogin.class.getPackage();
+        if (pkg == null) return null;
+        return pkg.getImplementationVersion();
 	}
 
 }
