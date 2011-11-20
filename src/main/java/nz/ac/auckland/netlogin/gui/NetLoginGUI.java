@@ -110,14 +110,12 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	
 	public void login(String upi, String password) {
 		this.username = upi; // for displaying in the user interface
-		
-		netLoginConnection.setUseStaticPingPort(preferences.getUseStaticPingPort());
 		try {
-			netLoginConnection.login(preferences.getServer(), new PopulatedCredentialsCallback(upi, password));
+			netLoginConnection.login(new PopulatedCredentialsCallback(upi, password));
+			statusLabel.setText(upi);
 		} catch (IOException ex) {
 			showError(ex.getMessage());
 		}
-		statusLabel.setText(upi);
 	}
 	
 	public boolean isSystemTraySupported() {

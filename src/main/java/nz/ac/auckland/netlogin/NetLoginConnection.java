@@ -4,10 +4,9 @@ import nz.ac.auckland.cs.des.C_Block;
 import nz.ac.auckland.cs.des.Key_schedule;
 import nz.ac.auckland.cs.des.desDataInputStream;
 import nz.ac.auckland.cs.des.desDataOutputStream;
-import nz.ac.auckland.netlogin.*;
 import nz.ac.auckland.netlogin.negotiation.Authenticator;
+import nz.ac.auckland.netlogin.negotiation.AuthenticatorFactory;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
-import nz.ac.auckland.netlogin.negotiation.password.PasswordAuthenticator;
 import javax.security.auth.login.LoginException;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -85,7 +84,7 @@ public class NetLoginConnection {
 	int endPeak; 					//TIME OF DAY IN MINUTES
 	int lastModDate; 				//DATESTAMP FROM THE CHARGES FILE
 
-	private Authenticator authenticator = new PasswordAuthenticator();
+	private Authenticator authenticator;
 
 	private PingListener netLogin;
 
@@ -93,7 +92,10 @@ public class NetLoginConnection {
 		this.netLogin = netLogin;
 	}
 
-	public void login(String server, CredentialsCallback callback) throws IOException {
+	public void login(CredentialsCallback callback) throws IOException {
+		String server = NetLoginPreferences.getInstance().getServer();
+		setUseStaticPingPort(NetLoginPreferences.getInstance().getUseStaticPingPort());
+		
 		pinger = new PingSender( server, PINGD_PORT, netLogin );
 		if( useStaticPingPort ){
 			ping_receiver = new PingRespHandler( netLogin, pinger, pinger.getSocket() );
@@ -126,6 +128,7 @@ public class NetLoginConnection {
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException {
 		try {
+			authenticator = AuthenticatorFactory.getInstance().getSelectedAuthenticator();
 			NetGuardian_stream = new SPP_Packet( server, AUTHD_PORT );
 
 			sendPacket_1(callback);

@@ -27,7 +27,7 @@ public class NetLoginCLI implements PingListener {
 	public void authenticate(CredentialsCallback callback) {
 		try {
 			netLoginConnection = new NetLoginConnection(this);
-			netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, callback);
+			netLoginConnection.login(callback);
 		} catch(Exception e) {
 			System.out.println(e);
 		}

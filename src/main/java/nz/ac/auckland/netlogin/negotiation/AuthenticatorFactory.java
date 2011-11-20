@@ -38,7 +38,7 @@ public class AuthenticatorFactory {
 		}
 	}
 
-	public Authenticator getDefaultAuthenticator() {
+	public Authenticator getSelectedAuthenticator() {
 		if (authenticators.isEmpty()) {
 			throw new RuntimeException("No authenticators are available");
 		}
