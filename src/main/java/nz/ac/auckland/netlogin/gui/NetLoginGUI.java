@@ -29,7 +29,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private JLabel planLabel = new JLabel("");
 	private JLabel usageLabel = new JLabel("");
 
-	private NetLoginPreferences p = new NetLoginPreferences();
+	private NetLoginPreferences preferences;
 
 	private JButton connectButton;
 	private JMenuItem loginMenuItem;
@@ -37,6 +37,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	private LoginDialog loginDialog;
 	private AboutDialog aboutDialog;
+	private PreferencesDialog preferencesDialog;
 
 	private NetLoginConnection netLoginConnection;
 	private boolean connected = false;
@@ -71,6 +72,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	private void initialize() {
+		preferences = new NetLoginPreferences();
 		netLoginConnection = new NetLoginConnection(this);
 
 		loadLookAndFeel();
@@ -128,7 +130,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			}
 		});
 
-		window.setBounds(p.getMainDialogBounds());
 		window.setBounds(12, 12, 270, 160);
 		window.setLocationRelativeTo(null);
 		window.setIconImages(windowIcons);
@@ -137,10 +138,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	public void login(String upi, String password) {
 		this.username = upi; // for displaying in the user interface
 		
-		netLoginConnection.setUseStaticPingPort(p.getUseStaticPingPort());
+		netLoginConnection.setUseStaticPingPort(preferences.getUseStaticPingPort());
 		try {
-			if (p.getUseAltServer()) {
-				netLoginConnection.login(p.getAltServer(), new PopulatedCredentialsCallback(upi, password));
+			if (preferences.getUseAltServer()) {
+				netLoginConnection.login(preferences.getAltServer(), new PopulatedCredentialsCallback(upi, password));
 			} else {
 				netLoginConnection.login(NetLoginConnection.AUTHD_SERVER, new PopulatedCredentialsCallback(upi, password));
 			}
@@ -176,6 +177,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			}
 		});
 
+		preferencesDialog = new PreferencesDialog(preferences);
 		aboutDialog = new AboutDialog();
 
 		mainPanel = new JPanel();
@@ -321,11 +323,11 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 		loginMenuItem.addActionListener(EventHandler.create(ActionListener.class, loginDialog, "open"));
 		logoutMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "disconnect"));
-		preferencesMenuItem.addActionListener(EventHandler.create(ActionListener.class, p, "showPreferencesDialog"));
+		preferencesMenuItem.addActionListener(EventHandler.create(ActionListener.class, preferencesDialog, "open"));
 		changePassMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "changePassword"));
 		quitMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "quit"));
 		aboutMenuItem.addActionListener(EventHandler.create(ActionListener.class, aboutDialog, "open"));
-		chargeRatesMenuItem.addActionListener(EventHandler.create(ActionListener.class, p, "showChargeRates"));
+		chargeRatesMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "showChargeRates"));
 
 		return menuBar;
 	}
