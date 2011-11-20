@@ -11,6 +11,8 @@ import java.awt.event.*;
 import java.beans.EventHandler;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.ArrayList;
 import static java.awt.GridBagConstraints.*;
 
 public class NetLoginGUI extends JPanel implements PingListener {
@@ -47,10 +49,11 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
-	static String icon_imagename="jnetlogin16x16.gif";
 
     private JPanel mainPanel;
 
+	private static final int[] windowIconSizes = { 16, 32, 128, 256 };
+	private List<Image> windowIcons;
     private Image iconDefault;
     private Image iconConnected;
     private Image iconConnecting;
@@ -71,6 +74,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		netLoginConnection = new NetLoginConnection(this);
 
 		loadLookAndFeel();
+		loadImages();
 		initBody();
 		createWindow();
 		initTrayIcon();
@@ -82,6 +86,23 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		} catch (Exception e) {
 			// ignore - continue with the default look and feel
 		}
+	}
+
+	private void loadImages() {
+        iconDefault = loadImage("StatusIcon.png");
+        iconConnected = loadImage("StatusIconConnected.png");
+        iconConnecting = loadImage("StatusIconConnecting.png");
+        iconDisconnected = loadImage("StatusIconDisconnected.png");
+
+		windowIcons = new ArrayList<Image>();
+		for(int iconSize : windowIconSizes) {
+			windowIcons.add(loadImage("AppIcon " + iconSize + ".png"));
+		}
+	}
+
+	private Image loadImage(String imageName) {
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		return toolkit.getImage(this.getClass().getResource("/" + imageName));
 	}
 
 	public void createWindow() {
@@ -110,7 +131,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		window.setBounds(p.getMainDialogBounds());
 		window.setBounds(12, 12, 270, 160);
 		window.setLocationRelativeTo(null);
-		window.setIconImage(new ImageIcon(icon_imagename).getImage());
+		window.setIconImages(windowIcons);
 	}
 	
 	public void login(String upi, String password) {
@@ -369,13 +390,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	private void initTrayIcon() {
         if (!isSystemTraySupported()) return;
-
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        iconDefault = toolkit.getImage(this.getClass().getResource("StatusIcon.png"));
-        iconConnected = toolkit.getImage(this.getClass().getResource("StatusIconConnected.png"));
-        iconConnecting = toolkit.getImage(this.getClass().getResource("StatusIconConnecting.png"));
-        iconDisconnected = toolkit.getImage(this.getClass().getResource("StatusIconDisconnected.png"));
-
 		PopupMenu popup = new PopupMenu();
 		
 		MenuItem rateItem = new MenuItem("Show Charge Rates");
