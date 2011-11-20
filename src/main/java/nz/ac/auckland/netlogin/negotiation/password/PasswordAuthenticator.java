@@ -6,6 +6,7 @@ import nz.ac.auckland.cs.des.desDataInputStream;
 import nz.ac.auckland.cs.des.desDataOutputStream;
 import nz.ac.auckland.netlogin.negotiation.Authenticator;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
+import javax.security.auth.login.CredentialNotFoundException;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -22,7 +23,7 @@ public class PasswordAuthenticator implements Authenticator {
 	}
 
 	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
-		if (!callback.requestCredentials()) throw new LoginException();
+		if (!callback.requestCredentials()) throw new CredentialNotFoundException();
 		String username = callback.getUsername();
 		String password = callback.retrievePassword();
 

@@ -78,7 +78,7 @@ public class NetLoginPreferences {
 	}
 
 	public boolean getUseStaticPingPort() {
-		return false;
+		return true;
 	}
 
 }

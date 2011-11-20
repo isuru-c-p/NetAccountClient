@@ -6,14 +6,11 @@ import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 
 public class NetLoginCLI implements PingListener {
-		
-	private String upi;
+	
 	private NetLoginConnection netLoginConnection;
 	private boolean displayStatus = false;
 
 	public NetLoginCLI(String upi, String password) {
-		this.upi = upi;
-
 		CredentialsCallback callback;
 		if (password == null) {
 			callback = new ConsolePasswordField(upi);
@@ -33,8 +30,10 @@ public class NetLoginCLI implements PingListener {
 		}
 	}
 
-	public void connected(int ipUsage, int planFlags) {
-		System.out.println("UPI:" + upi + " Status:Connected");
+	public void connected(String username, int ipUsage, int planFlags) {
+		System.out.println("Status:Connected");
+		System.out.println("UPI:" + username);
+
 		update(ipUsage, planFlags, null);
 	}
 
@@ -73,7 +72,6 @@ public class NetLoginCLI implements PingListener {
 			System.out.print("..");
 		} else {
 			System.out.println("Status:Connected");
-			System.out.println("UPI:" + upi);
 			System.out.println("Internet Plan:" + plan_name + "\nMBs used this month:" + MBs_usage + "MBs");
 			System.out.print("Pingd is active:.");
 			this.displayStatus = true;

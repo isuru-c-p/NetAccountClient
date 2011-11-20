@@ -13,9 +13,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 public class NetLoginConnection {
-	
-	public static final String AUTHD_SERVER = "gate.ec.auckland.ac.nz";
-	
+		
 	final int AUTHD_PORT = 312; // The port that we are awaiting authd from.
 	final int PINGD_PORT = 443; // The port that we are awaiting pings from.
 
@@ -52,24 +50,24 @@ public class NetLoginConnection {
 	int Sequence_Number = 0;
 
 	Key_schedule schedule = null;				//set up encryption key to the users passwd
-	int	clienttype = NETGUARDIAN_JAVA_CLIENT; 	//We are a multiuser client today
-	int cmd_data_length	= 2; 					//Ping Ports size (sizeof( short ))
-	short cmd_data = 0; 						//Port we want pings responses on
+	int clientType = NETGUARDIAN_JAVA_CLIENT; 	//We are a multiuser client today
+	int cmdDataLength = 2; 					//Ping Ports size (sizeof( short ))
+	short cmdData = 0; 						//Port we want pings responses on
 	
 	/* client version will control ping response messages:
 	 * when client version <3, quota-based Internet usage without user Internet plan
 	 * when client version >=3, usage-based Internet usage with displaying user plan
 	 */
-	int	clientversion = 3;	         
+	int clientVersion = 3;
 	
-	int	Client_Rel_Version;
-	int	clientcommand = CMD_GET_USER_BALANCES_NO_BLOCK;
+	int clientRelVersion;
+	int clientCommand = CMD_GET_USER_BALANCES_NO_BLOCK;
 
-	SPP_Packet NetGuardian_stream = null;
+	SPP_Packet netGuardianStream = null;
 
-	int Auth_Ref; 	//Reference to quote when we ping
-	int IPUsage; 	//Our IP Balance
-	int Response_Port;  //Our Port. the Server sends Ping responses to it
+	int authRef; 	//Reference to quote when we ping
+	int ipUsage; 	//Our IP Balance
+	int responsePort;  //Our Port. the Server sends Ping responses to it
 
 	PingSender pinger = null;
 	PingRespHandler ping_receiver = null;
@@ -85,34 +83,33 @@ public class NetLoginConnection {
 	int lastModDate; 				//DATESTAMP FROM THE CHARGES FILE
 
 	private Authenticator authenticator;
-
 	private PingListener netLogin;
 
-	public NetLoginConnection( PingListener netLogin ){
+	public NetLoginConnection(PingListener netLogin) {
 		this.netLogin = netLogin;
 	}
 
-	public void login(CredentialsCallback callback) throws IOException {
+	public void login(CredentialsCallback callback) throws IOException, LoginException {
 		String server = NetLoginPreferences.getInstance().getServer();
 		setUseStaticPingPort(NetLoginPreferences.getInstance().getUseStaticPingPort());
 		
 		pinger = new PingSender( server, PINGD_PORT, netLogin );
 		if( useStaticPingPort ){
 			ping_receiver = new PingRespHandler( netLogin, pinger, pinger.getSocket() );
-			Response_Port = 0;
+			responsePort = 0;
 		} else {
 			ping_receiver = new PingRespHandler( netLogin, pinger );
-			Response_Port = ping_receiver.getLocalPort();
+			responsePort = ping_receiver.getLocalPort();
 		}
 
 		authenticate( server, callback );
 		
-		pinger.prepare( schedule, Auth_Ref, serverNonce + 2, Sequence_Number );
+		pinger.prepare( schedule, authRef, serverNonce + 2, Sequence_Number );
 		ping_receiver.prepare( clientNonce + 3, Sequence_Number, schedule );
 		ping_receiver.start();
 		pinger.start();
 		
-		netLogin.connected(IPUsage, onPlan);
+		netLogin.connected(username, ipUsage, onPlan);
 	}
 
 	public void setUseStaticPingPort( boolean b ){
@@ -126,24 +123,19 @@ public class NetLoginConnection {
 			ping_receiver.end();
 	}
 
-	private void authenticate(String server, CredentialsCallback callback) throws IOException {
+	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {
 		try {
 			authenticator = AuthenticatorFactory.getInstance().getSelectedAuthenticator();
-			NetGuardian_stream = new SPP_Packet( server, AUTHD_PORT );
+			netGuardianStream = new SPP_Packet( server, AUTHD_PORT );
 
 			sendPacket_1(callback);
 			RespPacket_1();
 
 			SendSecondPacket();
 			ReadSecondResponsePacket();
-
-		} catch (IOException e) {
-			throw e;
-		} catch (LoginException e) {
-			throw new IOException(e);
 		} finally {
-			NetGuardian_stream.close();
-			NetGuardian_stream = null;
+			netGuardianStream.close();
+			netGuardianStream = null;
 		}
 	}
 
@@ -152,12 +144,12 @@ public class NetLoginConnection {
 		this.username = request.getUsername();
 
 		desDataOutputStream packet = new desDataOutputStream(128);
-		packet.writeInt(clienttype);
-		packet.writeInt(clientversion);
+		packet.writeInt(clientType);
+		packet.writeInt(clientVersion);
 		packet.writeBytes(request.getUsername(), UNAMESIZ); // truncates or pads so always UNAMESIZ
 		packet.write(request.getPayload());
 
-		NetGuardian_stream.SendPacket(AUTH_REQ_PACKET, VERSION, packet.toByteArray());
+		netGuardianStream.SendPacket(AUTH_REQ_PACKET, VERSION, packet.toByteArray());
 	}
 
 	private void RespPacket_1() throws IOException, LoginException {
@@ -169,7 +161,7 @@ public class NetLoginConnection {
 		byte URL[];
 		String error_msg;
 
-		PacketHeader = NetGuardian_stream.ReadPacket( AUTH_REQ_RESPONSE_PACKET, VERSION, InBuffer );
+		PacketHeader = netGuardianStream.ReadPacket( AUTH_REQ_RESPONSE_PACKET, VERSION, InBuffer );
 		switch ( PacketHeader.Result ) {
 			case SPP_Packet.RSLT_BAD_PACKET_TYPE:
 				throw new IOException( "Unexpected PacketType " + PacketHeader.Packet_type +
@@ -177,11 +169,11 @@ public class NetLoginConnection {
 			case SPP_Packet.REMOTE_RSLT_BAD_VERSION:
 				error_msg = "Client Version incorrect";
 				unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream(
-							InBuffer, 0, NetGuardian_stream.Last_Read_length ) );
+							InBuffer, 0, netGuardianStream.Last_Read_length ) );
 				try {
-					Client_Rel_Version = unencrypted_data_input_Stream.readInt();
-					if ( Client_Rel_Version > 0 ) {
-						error_msg += "\rThe latest version is " + Client_Rel_Version;
+					clientRelVersion = unencrypted_data_input_Stream.readInt();
+					if ( clientRelVersion > 0 ) {
+						error_msg += "\rThe latest version is " + clientRelVersion;
 						try {
 							client_URL_Length = unencrypted_data_input_Stream.readInt();
 							if ( client_URL_Length != 0 ) {
@@ -207,14 +199,14 @@ public class NetLoginConnection {
 
 		PacketHeader = null;
 
-		if( NetGuardian_stream.Last_Read_length < /*C_Block.size() + 4 * 4*/ 20 ) 
+		if( netGuardianStream.Last_Read_length < /*C_Block.size() + 4 * 4*/ 20 )
 			throw new IOException("RespPacket_1: AUTH_REQ_RESPONSE_PACKET too short, " +
-					NetGuardian_stream.Last_Read_length + " bytes " + (C_Block.size() * 4) );
+					netGuardianStream.Last_Read_length + " bytes " + (C_Block.size() * 4) );
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 4 ) );
-		Client_Rel_Version = unencrypted_data_input_Stream.readInt();
+		clientRelVersion = unencrypted_data_input_Stream.readInt();
 
-		byte[] payload = new byte[NetGuardian_stream.Last_Read_length - 4];
+		byte[] payload = new byte[netGuardianStream.Last_Read_length - 4];
 		System.arraycopy(InBuffer, 4, payload, 0, payload.length);
 
 		Authenticator.LoginComplete session = authenticator.validateResponse(payload);
@@ -228,14 +220,14 @@ public class NetLoginConnection {
 		desDataOutputStream des_out = new desDataOutputStream( 128 );
 		byte EncryptedOutBuffer[];
 
-		cmd_data = ( short ) Response_Port; 	//Port we want pings responses on
+		cmdData = ( short ) responsePort; 	//Port we want pings responses on
 		des_out.writeInt( serverNonce + 1 );   		//Can throw IOException
-		des_out.writeInt( clientcommand );   	//Can throw IOException
-		des_out.writeInt( cmd_data_length ); 	//Can throw IOException
-		des_out.writeShort( cmd_data );			//Can throw IOException
+		des_out.writeInt(clientCommand);   	//Can throw IOException
+		des_out.writeInt(cmdDataLength); 	//Can throw IOException
+		des_out.writeShort(cmdData);			//Can throw IOException
 
 		EncryptedOutBuffer = des_out.des_encrypt( schedule );  	//encrypt buffer
-		NetGuardian_stream.SendPacket( AUTH_CONFIRM_PACKET, VERSION, EncryptedOutBuffer );
+		netGuardianStream.SendPacket( AUTH_CONFIRM_PACKET, VERSION, EncryptedOutBuffer );
 	}
 
 	private void ReadSecondResponsePacket() throws IOException {
@@ -247,7 +239,7 @@ public class NetLoginConnection {
 		ReadResult PacketHeader = null;
 
 		// Process final ack packet to ensure all went well
-		PacketHeader = NetGuardian_stream.ReadPacket( AUTH_CONFIRM_RESPONSE_PACKET, VERSION, InBuffer );
+		PacketHeader = netGuardianStream.ReadPacket( AUTH_CONFIRM_RESPONSE_PACKET, VERSION, InBuffer );
 		switch ( PacketHeader.Result ) {
 			case SPP_Packet.RSLT_BAD_PACKET_TYPE:
 				throw new IOException( "Unexpected PacketType " + PacketHeader.Packet_type +
@@ -258,7 +250,7 @@ public class NetLoginConnection {
 				throw new IOException( "Protocol Error " + PacketHeader.Result );
 		}
 
-		if ( NetGuardian_stream.Last_Read_length < ( 10 * 4 ) )
+		if ( netGuardianStream.Last_Read_length < ( 10 * 4 ) )
 			throw new IOException( "ReadSecondResponsePacket: AUTH_CONFIRM_RESPONSE_PACKET too short" );
 		//too short for serverNonce, ack and string
 
@@ -272,7 +264,7 @@ public class NetLoginConnection {
 		lastModDate = unencrypted_data_input_Stream.readInt();
 
 
-		des_in = new desDataInputStream( InBuffer , 28, NetGuardian_stream.Last_Read_length, schedule );
+		des_in = new desDataInputStream( InBuffer , 28, netGuardianStream.Last_Read_length, schedule );
 
 		random_returned = des_in.readInt();
 		if ( clientNonce + 2 != random_returned ) {	// Other end doesn't agree on the current passwd
@@ -291,8 +283,13 @@ public class NetLoginConnection {
 		if( cmd_result_data_length < 2 * 4 )
 			throw new IOException( "Cmd result buffer too small" );
 		else {
-			Auth_Ref = des_in.readInt();
-			IPUsage = des_in.readInt();
+			authRef = des_in.readInt();
+			ipUsage = des_in.readInt();
 		}
 	}
+
+	public String getUsername() {
+		return username;
+	}
+	
 }

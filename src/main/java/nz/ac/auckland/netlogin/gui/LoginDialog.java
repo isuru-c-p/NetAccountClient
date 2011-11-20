@@ -1,18 +1,18 @@
 package nz.ac.auckland.netlogin.gui;
 
-import nz.ac.auckland.netlogin.util.Announcer;
+import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.util.SpringUtilities;
-
 import javax.swing.*;
 import javax.swing.event.CaretListener;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowListener;
 import java.beans.EventHandler;
 import java.util.EventListener;
 
-public class LoginDialog {
+public class LoginDialog implements CredentialsCallback {
 
-	private Announcer<LoginListener> loginListeners = Announcer.to(LoginListener.class);
+	private boolean valid = false;
 	private JDialog dialog;
 	private JTextField userText;
 	private JTextField passwordText;
@@ -75,7 +75,7 @@ public class LoginDialog {
 		passwordText.addActionListener(loginAction);
 
 		// close the dialog
-		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
+		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "cancel"));
 	}
 
 	protected void createComponents() {
@@ -101,6 +101,8 @@ public class LoginDialog {
 	}
 
 	public void open() {
+		valid = false;
+		clearPassword();
 		dialog.setVisible(true);
 	}
 
@@ -121,20 +123,39 @@ public class LoginDialog {
 	}
 
 	public void login() {
-		String username = userText.getText();
-		String password = passwordText.getText();
-		clearPassword();
+		valid = true;
 		close();
-		loginListeners.announce().login(username, password);
 	}
 
-    public void addLoginListener(LoginListener listener) {
-        loginListeners.addListener(listener);
-    }
+	public void cancel() {
+		clearPassword();
+		close();
+	}
 
-    public void removeLoginListener(LoginListener listener) {
-        loginListeners.removeListener(listener);
-    }
+	public boolean requestCredentials() {
+		open();
+
+		// wait until the dialog is closed
+		while (dialog.isVisible()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// ignore and continue
+			}
+		}
+
+		return valid;
+	}
+
+	public String getUsername() {
+		return userText.getText();
+	}
+
+	public String retrievePassword() {
+		String password = passwordText.getText();
+		clearPassword();
+		return password;
+	}
 
 	public static interface LoginListener extends EventListener {
 		public void login(String username, String password);

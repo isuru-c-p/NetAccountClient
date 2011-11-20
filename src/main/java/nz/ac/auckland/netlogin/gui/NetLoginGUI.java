@@ -3,7 +3,10 @@ package nz.ac.auckland.netlogin.gui;
 import nz.ac.auckland.netlogin.NetLoginConnection;
 import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
+import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
+import javax.security.auth.login.CredentialNotFoundException;
+import javax.security.auth.login.LoginException;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
@@ -14,8 +17,6 @@ import java.lang.reflect.Method;
 import static java.awt.GridBagConstraints.*;
 
 public class NetLoginGUI extends JPanel implements PingListener {
-
-	private String username;
 
 	private Window window;
     private JFrame iconifiableWindow;
@@ -58,7 +59,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	public NetLoginGUI(String upi, String password) {
 		initialize();
-		login(upi, password);
+		login(new PopulatedCredentialsCallback(upi, password));
 		minimizeWindow();
 	}
 
@@ -108,16 +109,22 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		window.setIconImages(Icons.getInstance().getWindowIcons());
 	}
 	
-	public void login(String upi, String password) {
-		this.username = upi; // for displaying in the user interface
+	public void login() {
+		login(loginDialog);
+	}
+
+	protected void login(CredentialsCallback callback) {
 		try {
-			netLoginConnection.login(new PopulatedCredentialsCallback(upi, password));
-			statusLabel.setText(upi);
-		} catch (IOException ex) {
-			showError(ex.getMessage());
+			netLoginConnection.login(callback);
+		} catch (CredentialNotFoundException e) {
+			// user cancelled, ignore
+		} catch (LoginException e) {
+			showError(e.getMessage());
+		} catch (IOException e) {
+			showError(e.getMessage());
 		}
 	}
-	
+
 	public boolean isSystemTraySupported() {
 		return useSystemTray && SystemTray.isSupported();
 	}
@@ -138,12 +145,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	public void initBody() {
 		loginDialog = new LoginDialog();
-		loginDialog.addLoginListener(new LoginDialog.LoginListener() {
-			public void login(String username, String password) {
-				NetLoginGUI.this.login(username, password);
-			}
-		});
-
 		preferencesDialog = new PreferencesDialog(preferences);
 		aboutDialog = new AboutDialog();
 
@@ -164,7 +165,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		connectButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
-					loginDialog.open();
+					login();
                 } else {
 					disconnect();
                 }
@@ -202,7 +203,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		logoutMenuItem.setEnabled(false);
 	}
 
-	public void connected(int ipUsage, int planFlags) {
+	public void connected(String username, int ipUsage, int planFlags) {
 		this.connected = true;
 		statusLabel.setText(username);
 		connectButton.setToolTipText("Disconnect from NetAccount");
@@ -288,7 +289,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		menuBar.add(servicesMenu);
 		menuBar.add(helpMenu);
 
-		loginMenuItem.addActionListener(EventHandler.create(ActionListener.class, loginDialog, "open"));
+		loginMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "login"));
 		logoutMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "disconnect"));
 		preferencesMenuItem.addActionListener(EventHandler.create(ActionListener.class, preferencesDialog, "open"));
 		changePassMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "changePassword"));
