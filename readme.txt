@@ -52,6 +52,24 @@ On the Domain Controller, and run this from a UAC command prompt:
 setspn.exe -U -S netlogin/gate-test.ec.auckland.ac.nz uoatest\gate-test
 
 
+Service principal list
+
+gate-dev.ec.auckland.ac.nz/UOATEST.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/UOATEST.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+
+
 Reference
 
 SSPI and GSSAPI interoperability
