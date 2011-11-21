@@ -13,26 +13,23 @@ public class GSSAPIAuthenticator implements Authenticator {
     private final GSSManager manager;
     private GSSContext context;
 
-    static {
+    public GSSAPIAuthenticator() throws GSSException {
         setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
         setSystemPropertyDefault("java.security.auth.login.config", GSSAPIAuthenticator.class.getResource("/login.config").toString());
-    }
-
-    static private void setSystemPropertyDefault(String name, String value) {
-        if (System.getProperty(name) == null) {
-            System.setProperty(name, value);
-        }
-    }
-
-    public GSSAPIAuthenticator() throws GSSException {
+		
         KRB5_MECHANISM = new Oid("1.2.840.113554.1.2.2");
         KRB5_PRINCIPAL_NAME_TYPE = new Oid("1.2.840.113554.1.2.2.1");
         manager = GSSManager.getInstance();
     }
 
+    private static void setSystemPropertyDefault(String name, String value) {
+        if (System.getProperty(name) == null) {
+            System.setProperty(name, value);
+        }
+    }
 
     public String getName() {
-        return "GSSAPI (Java)";
+        return "GSSAPI";
     }
 
     public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
@@ -63,7 +60,7 @@ public class GSSAPIAuthenticator implements Authenticator {
 
     }
 
-    public String getServicePrincipalName() {
+    public static String getServicePrincipalName() {
         String serverName = NetLoginPreferences.getInstance().getServer();
         String realmName = NetLoginPreferences.getInstance().getRealm();
         return "netlogin/" + serverName + "@" + realmName;

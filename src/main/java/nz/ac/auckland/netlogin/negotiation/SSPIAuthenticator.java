@@ -6,27 +6,41 @@ import com.sun.jna.platform.win32.Sspi;
 import com.sun.jna.platform.win32.W32Errors;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.ptr.NativeLongByReference;
+import javax.security.auth.login.LoginException;
+import java.io.IOException;
 
 /**
  * SSPI is a Microsoft protocol for authenticating between client and server.
  * It is <a href="http://msdn.microsoft.com/en-us/library/aa380496(VS.85).aspx">interoperable with GSSAPI, subject to conditions</a>.
  */
-public class SSPIAuthenticator {
+public class SSPIAuthenticator implements Authenticator {
 
-    public String getName() {
-        return "SSPI (Windows)";
+	private String authenticationMechanism = "Kerberos";
+
+	public String getName() {
+        return "SSPI";
     }
-
+	
 	// http://code.dblock.org/jna-acquirecredentialshandle-initializesecuritycontext-and-acceptsecuritycontext-establishing-an-authenticated-connection
 	// obtaining a spn - http://msdn.microsoft.com/en-us/library/ff649429.aspx
+	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
+		String targetPrincipal = GSSAPIAuthenticator.getServicePrincipalName();
+		byte[] outToken = createToken(targetPrincipal);
+		return new AuthenticationRequest(targetPrincipal, outToken);
+	}
+
+	public LoginComplete validateResponse(byte[] serverResponse) throws LoginException, IOException {
+		throw new LoginException("Phase two not implemented");
+	}
+
 	public static void main(String[] args) {
 		if (args.length < 1) {
 			System.out.println("Please supply the principal to connect to, for example netlogin/gate.ec.auckland.ac.nz@AD.EC.AUCKLAND.AC.NZ");
 			System.exit(0);
 		}
+	}
 
-		String targetPrincipal = args[1];
-
+	public byte[] createToken(String targetPrincipal) throws LoginException {
 		Sspi.CredHandle phClientCredential = null;
 		Sspi.CtxtHandle phClientContext = null;
 
@@ -36,7 +50,7 @@ public class SSPIAuthenticator {
 			Sspi.TimeStamp ptsClientExpiry = new Sspi.TimeStamp();
 
 			int responseCode = Secur32.INSTANCE.AcquireCredentialsHandle(
-					null, "Kerberos", new NativeLong(Sspi.SECPKG_CRED_OUTBOUND), null, null,
+					null, authenticationMechanism, new NativeLong(Sspi.SECPKG_CRED_OUTBOUND), null, null,
 					null, null, phClientCredential, ptsClientExpiry);
 
 			if (responseCode != W32Errors.SEC_E_OK) {
@@ -69,42 +83,39 @@ public class SSPIAuthenticator {
 					pfClientContextAttr,
 					null);
 
-			if (clientRc == W32Errors.SEC_E_OK) {
-				System.out.println("Success");
-				return;
-			} else if (clientRc == W32Errors.SEC_I_CONTINUE_NEEDED) {
-				System.out.println("Continue");
-				return;
+			if (clientRc != W32Errors.SEC_E_OK && clientRc != W32Errors.SEC_I_CONTINUE_NEEDED) {
+				handleError(clientRc);
 			}
 
-			Win32Exception clientRcEx = new Win32Exception(clientRc);
-
-			// check for security errors
-			switch(clientRcEx.getHR().intValue()) {
-				case W32Errors.SEC_E_INVALID_HANDLE: // The handle passed to the function is invalid.
-				case W32Errors.SEC_E_TARGET_UNKNOWN: // The target was not recognized.
-				case W32Errors.SEC_E_LOGON_DENIED: // The logon failed.
-				case W32Errors.SEC_E_INTERNAL_ERROR: // The Local Security Authority cannot be contacted.
-				case W32Errors.SEC_E_NO_CREDENTIALS: //  No credentials are available in the security package.
-				case W32Errors.SEC_E_NO_AUTHENTICATING_AUTHORITY: // No authority could be contacted for authentication.
-					System.out.printf("%1$#x: %2$s\n", clientRcEx.getHR().intValue(), clientRcEx.getMessage());
-					return;
-			}
-
-			// check for generic errors
-			switch(clientRcEx.getHR().intValue() & 0xFFFF) {
-				case W32Errors.ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY: // Access to %1 has been restricted by your Administrator by policy rule %2.
-				System.out.printf("%1$#x: %2$s\n", clientRcEx.getHR().intValue(), clientRcEx.getMessage());
-				return;
-			}
-
-			System.out.printf("Unexpected error: %1$#x: %2$s\n", clientRcEx.getHR().intValue(), clientRcEx.getMessage());
+			return pbClientToken.getBytes();
 
 		} finally {
 			// release client context
 			if (phClientContext != null) Secur32.INSTANCE.DeleteSecurityContext(phClientContext);
 			if (phClientCredential != null) Secur32.INSTANCE.FreeCredentialsHandle(phClientCredential);
 		}
+	}
+
+	private void handleError(int clientRc) throws LoginException {
+		Win32Exception exception = new Win32Exception(clientRc);
+		System.err.printf("SSPI: %1$#x: %2$s\n", exception.getHR().intValue(), exception.getMessage().trim());
+		
+//		// check for security errors
+//		switch(exception.getHR().intValue()) {
+//			case W32Errors.SEC_E_NO_CREDENTIALS: //  No credentials are available in the security package.
+//			case W32Errors.SEC_E_INVALID_HANDLE: // The handle passed to the function is invalid.
+//			case W32Errors.SEC_E_TARGET_UNKNOWN: // The target was not recognized.
+//			case W32Errors.SEC_E_LOGON_DENIED: // The logon failed.
+//			case W32Errors.SEC_E_INTERNAL_ERROR: // The Local Security Authority cannot be contacted.
+//			case W32Errors.SEC_E_NO_AUTHENTICATING_AUTHORITY: // No authority could be contacted for authentication.
+//		}
+//
+//		// check for generic errors
+//		switch(exception.getHR().intValue() & 0xFFFF) {
+//			case W32Errors.ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY: // Access to %1 has been restricted by your Administrator by policy rule %2.
+//		}
+
+		throw new LoginException(exception.getMessage());
 	}
 
 }

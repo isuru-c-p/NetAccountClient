@@ -7,13 +7,11 @@ import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 import javax.security.auth.login.CredentialNotFoundException;
-import javax.security.auth.login.LoginException;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.EventHandler;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import static java.awt.GridBagConstraints.*;
 
@@ -119,9 +117,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			netLoginConnection.login(callback);
 		} catch (CredentialNotFoundException e) {
 			// user cancelled, ignore
-		} catch (LoginException e) {
-			showError(e.getMessage());
-		} catch (IOException e) {
+		} catch (Exception e) {
 			showError(e.getMessage());
 		}
 	}
