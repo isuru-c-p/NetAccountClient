@@ -30,7 +30,7 @@ public class AuthenticatorFactory {
 		try {
 			Class clazz = Class.forName(className);
 			if (!Authenticator.class.isAssignableFrom(clazz)) {
-				System.err.printf("Unable to load %s, not an authenticator", className);
+				System.err.printf("Unable to load %s, not an authenticator\n", className);
 				return;
 			}
 
