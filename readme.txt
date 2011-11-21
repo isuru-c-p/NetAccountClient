@@ -41,6 +41,17 @@ AUTH_CONFIRM_RESPONSE_PACKET
 	+ ip usage :: int
 
 
+Creating a SPN
+
+Create account
++ full name = fqdn
++ account name = fqdn
++ pre-2000 name = hostname
+
+On the Domain Controller, and run this from a UAC command prompt:
+setspn.exe -U -S netlogin/gate-test.ec.auckland.ac.nz uoatest\gate-test
+
+
 Reference
 
 SSPI and GSSAPI interoperability
