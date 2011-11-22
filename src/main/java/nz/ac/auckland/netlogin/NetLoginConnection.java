@@ -152,9 +152,7 @@ public class NetLoginConnection {
 	}
 
 	private void readPacket1() throws IOException, LoginException {
-		desDataInputStream des_in;
 		DataInputStream	unencrypted_data_input_Stream = null;
-		int random_returned;
 		ReadResult PacketHeader;
 		int client_URL_Length;
 		byte URL[];
@@ -287,8 +285,4 @@ public class NetLoginConnection {
 		}
 	}
 
-	public String getUsername() {
-		return username;
-	}
-	
 }
