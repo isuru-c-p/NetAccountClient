@@ -1,5 +1,6 @@
 package nz.ac.auckland.netlogin.negotiation;
 
+import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.Secur32;
 import com.sun.jna.platform.win32.Sspi;
@@ -17,7 +18,12 @@ public class SSPIAuthenticator implements Authenticator {
 
 	private String authenticationMechanism = "Kerberos";
 
-	public String getName() {
+    public SSPIAuthenticator() throws ClassNotFoundException {
+        // attempt to load Secur32 to see if the native libs are available
+        Class.forName("com.sun.jna.platform.win32.Secur32", true, SSPIAuthenticator.class.getClassLoader());
+    }
+
+    public String getName() {
         return "SSPI";
     }
 	

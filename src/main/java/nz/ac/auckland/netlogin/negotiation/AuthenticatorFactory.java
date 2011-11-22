@@ -38,6 +38,8 @@ public class AuthenticatorFactory {
 			authenticators.put(authenticator.getName(), authenticator);
 		} catch (ClassNotFoundException e) {
 			System.err.printf("Authenticator not found %s\n", className);
+        } catch (UnsatisfiedLinkError e) {
+            System.err.printf("Authenticator not available %s\n", className);
 		} catch (Exception e) {
 			System.err.printf("Unable to load authenticator %s: %s\n", className, e.getMessage());
 		}
