@@ -124,6 +124,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		} catch (CredentialNotFoundException e) {
 			// user cancelled, ignore
 		} catch (Exception e) {
+            //e.printStackTrace();
 			showError(e.getMessage());
 		}
 	}

@@ -125,22 +125,20 @@ public class NetLoginConnection {
 	}
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {
-		try {
-			authenticator = AuthenticatorFactory.getInstance().getSelectedAuthenticator();
-			netGuardianStream = new SPP_Packet( server, AUTHD_PORT );
-
-			sendPacket_1(callback);
-			RespPacket_1();
-
-			SendSecondPacket();
-			ReadSecondResponsePacket();
+		authenticator = AuthenticatorFactory.getInstance().getSelectedAuthenticator();
+		netGuardianStream = new SPP_Packet(server, AUTHD_PORT);
+        try {
+			sendPacket1(callback);
+			readPacket1();
+			sendPacket2();
+			readPacket2();
 		} finally {
-			netGuardianStream.close();
+            netGuardianStream.close();
 			netGuardianStream = null;
 		}
 	}
 
-	private void sendPacket_1(CredentialsCallback callback) throws IOException, LoginException {
+	private void sendPacket1(CredentialsCallback callback) throws IOException, LoginException {
 		Authenticator.AuthenticationRequest request = authenticator.startAuthentication(callback);
 		this.username = request.getUsername();
 
@@ -153,7 +151,7 @@ public class NetLoginConnection {
 		netGuardianStream.SendPacket(AUTH_REQ_PACKET, VERSION, packet.toByteArray());
 	}
 
-	private void RespPacket_1() throws IOException, LoginException {
+	private void readPacket1() throws IOException, LoginException {
 		desDataInputStream des_in;
 		DataInputStream	unencrypted_data_input_Stream = null;
 		int random_returned;
@@ -201,7 +199,7 @@ public class NetLoginConnection {
 		PacketHeader = null;
 
 		if( netGuardianStream.Last_Read_length < /*C_Block.size() + 4 * 4*/ 20 )
-			throw new IOException("RespPacket_1: AUTH_REQ_RESPONSE_PACKET too short, " +
+			throw new IOException("readPacket1: AUTH_REQ_RESPONSE_PACKET too short, " +
 					netGuardianStream.Last_Read_length + " bytes " + (C_Block.size() * 4) );
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 4 ) );
@@ -217,7 +215,7 @@ public class NetLoginConnection {
 		schedule = new Key_schedule(session.getSessionKey());
 	}
 
-	private void SendSecondPacket() throws IOException {
+	private void sendPacket2() throws IOException {
 		desDataOutputStream des_out = new desDataOutputStream( 128 );
 		byte EncryptedOutBuffer[];
 
@@ -231,7 +229,7 @@ public class NetLoginConnection {
 		netGuardianStream.SendPacket( AUTH_CONFIRM_PACKET, VERSION, EncryptedOutBuffer );
 	}
 
-	private void ReadSecondResponsePacket() throws IOException {
+	private void readPacket2() throws IOException {
 		desDataInputStream des_in;
 		int random_returned;
 		int ack;
@@ -252,7 +250,7 @@ public class NetLoginConnection {
 		}
 
 		if ( netGuardianStream.Last_Read_length < ( 10 * 4 ) )
-			throw new IOException( "ReadSecondResponsePacket: AUTH_CONFIRM_RESPONSE_PACKET too short" );
+			throw new IOException( "readPacket2: AUTH_CONFIRM_RESPONSE_PACKET too short" );
 		//too short for serverNonce, ack and string
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 28 ) );
