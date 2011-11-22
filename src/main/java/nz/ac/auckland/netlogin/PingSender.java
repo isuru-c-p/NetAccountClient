@@ -83,22 +83,6 @@ public class PingSender extends Thread {
 		outstandingPings = 0;
 	}
 
-	public void sendMessage( String user, String message ){
-		DatagramPacket sendPacket;
-		desDataOutputStream packet = new desDataOutputStream(8192);
-		byte messageBytes[];
-
-		try {
-			packet.writeInt(-1);					// -1 tells Pingd this is a message
-			packet.writeBytes("senduser " + user + " " + message + " ");
-			messageBytes = packet.toByteArray();
-			sendPacket = new DatagramPacket(messageBytes, messageBytes.length, host, port);
-			s.send(sendPacket);
-		} catch (IOException e) {
-			System.out.println( "nz.ac.auckland.netlogin.PingSender: Error sending message" );
-		}
-	}
-
 	public synchronized void run( ) {
 		desDataOutputStream packet = new desDataOutputStream(128);
 		desDataOutputStream desOut = new desDataOutputStream(128);
@@ -123,7 +107,7 @@ public class PingSender extends Thread {
 				outstandingPings++;
 				missedPings = 0;
 			} catch (IOException e) {
-				System.out.println("nz.ac.auckland.netlogin.PingSender: Error sending ping packet");
+				System.out.println("PingSender: Error sending ping packet");
 				missedPings++; // Ignore it at least 10 times in a row
 			}
 
