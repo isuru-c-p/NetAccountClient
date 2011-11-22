@@ -1,6 +1,7 @@
 package nz.ac.auckland.netlogin.negotiation;
 
 import nz.ac.auckland.netlogin.NetLoginPreferences;
+import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -14,18 +15,12 @@ public class GSSAPIAuthenticator implements Authenticator {
     private GSSContext context;
 
     public GSSAPIAuthenticator() throws GSSException {
-        setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
-        setSystemPropertyDefault("java.security.auth.login.config", GSSAPIAuthenticator.class.getResource("/login.config").toString());
+        SystemSettings.setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
+        SystemSettings.setSystemPropertyDefault("java.security.auth.login.config", GSSAPIAuthenticator.class.getResource("/login.config").toString());
 		
         KRB5_MECHANISM = new Oid("1.2.840.113554.1.2.2");
         KRB5_PRINCIPAL_NAME_TYPE = new Oid("1.2.840.113554.1.2.2.1");
         manager = GSSManager.getInstance();
-    }
-
-    private static void setSystemPropertyDefault(String name, String value) {
-        if (System.getProperty(name) == null) {
-            System.setProperty(name, value);
-        }
     }
 
     public String getName() {

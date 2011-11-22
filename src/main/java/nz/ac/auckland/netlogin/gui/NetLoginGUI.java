@@ -6,6 +6,7 @@ import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
+import nz.ac.auckland.netlogin.util.SystemSettings;
 import javax.security.auth.login.CredentialNotFoundException;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -74,6 +75,11 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	private void loadLookAndFeel() {
 		try {
+            SystemSettings.setSystemPropertyDefault("apple.laf.useScreenMenuBar", "true");
+            SystemSettings.setSystemPropertyDefault("com.apple.macos.useScreenMenuBar", "true"); // historical
+            SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.apple.menu.about.name", "NetLogin");
+            SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.live-resize", "true");
+
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			// ignore - continue with the default look and feel
