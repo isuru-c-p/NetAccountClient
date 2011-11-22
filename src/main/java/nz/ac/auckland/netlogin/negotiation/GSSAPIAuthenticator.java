@@ -4,6 +4,7 @@ import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class GSSAPIAuthenticator implements Authenticator {
@@ -31,12 +32,13 @@ public class GSSAPIAuthenticator implements Authenticator {
         try {
             context = createContext();
 
-		    byte[] inToken = new byte[0];
-            byte[] outToken = context.initSecContext(inToken, 0, inToken.length);
+			ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+			outStream.write("gss:".getBytes());
+            context.initSecContext(null, outStream);
             
             String username = context.getSrcName().toString().split("@", 2)[0];
 
-            return new AuthenticationRequest(username, outToken);
+            return new AuthenticationRequest(username, outStream.toByteArray());
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
             throw new LoginException("GSSAPI: " + e.getMessage());
@@ -47,7 +49,7 @@ public class GSSAPIAuthenticator implements Authenticator {
 
         try {
             byte[] outToken = context.initSecContext(inToken, 0, inToken.length);
-            if (!context.isEstablished()) throw new LoginException("Trust not established after one exchanges");
+            if (!context.isEstablished() || outToken != null) throw new LoginException("Trust not established after one exchange");
             throw new LoginException("Now we need to transfer the data!");
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
