@@ -39,7 +39,8 @@ public class GSSAPIAuthenticator implements Authenticator {
 		    byte[] inToken = new byte[0];
             byte[] outToken = context.initSecContext(inToken, 0, inToken.length);
             
-            String username = context.getSrcName().toString();
+            String username = context.getSrcName().toString().split("@", 2)[0];
+
             return new AuthenticationRequest(username, outToken);
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
