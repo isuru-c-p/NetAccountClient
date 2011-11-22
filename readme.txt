@@ -48,8 +48,12 @@ Create account
 + account name = fqdn
 + pre-2000 name = hostname
 
+Don't create the SPN manually, ktpass does it as part of creating the keytab!
 On the Domain Controller, and run this from a UAC command prompt:
 setspn.exe -U -S netlogin/gate-test.ec.auckland.ac.nz uoatest\gate-test
+
+Create the keytab
+ktpass /out gate-dev.keytab /princ netlogin/gate-dev.ec.auckland.ac.nz@UOATEST.AUCKLAND.AC.NZ /mapuser uoatest\gate-dev /ptype KRB5_NT_PRINCIPAL +rndpass /crypto RC4-HMAC-NT
 
 
 Service principal list
