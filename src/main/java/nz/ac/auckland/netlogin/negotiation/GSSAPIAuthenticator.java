@@ -40,8 +40,8 @@ public class GSSAPIAuthenticator implements Authenticator {
 
             return new AuthenticationRequest(username, outStream.toByteArray());
         } catch (GSSException e) {
-            System.err.println("GSSAPI: " + e.getMessage());
-            throw new LoginException("GSSAPI: " + e.getMessage());
+            System.err.println("GSSAPI request: " + e.getMessage());
+            throw new LoginException("GSSAPI request: " + e.getMessage());
         }
     }
 
@@ -52,8 +52,8 @@ public class GSSAPIAuthenticator implements Authenticator {
             if (!context.isEstablished() || outToken != null) throw new LoginException("Trust not established after one exchange");
             throw new LoginException("Now we need to transfer the data!");
         } catch (GSSException e) {
-            System.err.println("GSSAPI: " + e.getMessage());
-            throw new LoginException("GSSAPI: " + e.getMessage());
+            System.err.println("GSSAPI response: " + e.getMessage());
+            throw new LoginException("GSSAPI response: " + e.getMessage());
         }
 
     }
