@@ -143,14 +143,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		preferencesDialog = new PreferencesDialog(preferences);
 		aboutDialog = new AboutDialog();
 
-		mainPanel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-        mainPanel.setLayout(gbl);
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.anchor = CENTER;
-
 		upiTitle.setForeground(labelColor);
 		planTitle.setForeground(labelColor);
 		usageTitle.setForeground(labelColor);
@@ -167,15 +159,29 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			}
 		});
 
-		addExternal(mainPanel, gbc, 0, 0, upiTitle, VERTICAL, EAST);
-		addExternal(mainPanel, gbc, 0, 1, planTitle, VERTICAL, EAST);
-		addExternal(mainPanel, gbc, 0, 2, usageTitle, VERTICAL, EAST);
-		addExternal(mainPanel, gbc, 1, 0, statusLabel, VERTICAL, WEST);
-		addExternal(mainPanel, gbc, 1, 1, planLabel, VERTICAL, WEST);
-		addExternal(mainPanel, gbc, 1, 2, usageLabel, VERTICAL, WEST);
-		addExternal(mainPanel, gbc, 0, 3, new JSeparator(), HORIZONTAL, CENTER);
-		addExternal(mainPanel, gbc, 1, 3, new JSeparator(), HORIZONTAL, CENTER);
-		addExternal(mainPanel, gbc, 1, 4, connectButton, NONE, CENTER);
+		JPanel bodyPanel = new JPanel();
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints gbc = new GridBagConstraints();
+        bodyPanel.setLayout(gbl);
+		gbc.weightx = 1.0;
+		gbc.weighty = 1.0;
+		gbc.anchor = CENTER;
+
+		addExternal(bodyPanel, gbc, 0, 0, upiTitle, VERTICAL, EAST);
+		addExternal(bodyPanel, gbc, 0, 1, planTitle, VERTICAL, EAST);
+		addExternal(bodyPanel, gbc, 0, 2, usageTitle, VERTICAL, EAST);
+		addExternal(bodyPanel, gbc, 1, 0, statusLabel, VERTICAL, WEST);
+		addExternal(bodyPanel, gbc, 1, 1, planLabel, VERTICAL, WEST);
+		addExternal(bodyPanel, gbc, 1, 2, usageLabel, VERTICAL, WEST);
+
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 7));
+		buttonPanel.add(connectButton);
+
+		mainPanel = new JPanel();
+		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+		mainPanel.add(bodyPanel);
+		mainPanel.add(new JSeparator());
+		mainPanel.add(buttonPanel);
 	}
 
 	private void addExternal(JPanel panel, GridBagConstraints constraints, int x, int y, JComponent c, int fill, int anchor) {
@@ -193,6 +199,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	public void connecting() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				connectButton.setEnabled(false);
 				statusLabel.setText("Connecting...");
 			}
 		});
@@ -203,6 +210,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			public void run() {
 				if (message != null) JOptionPane.showMessageDialog(NetLoginGUI.this, "NetLogin - " + message);
 				statusLabel.setText("Unable to connect");
+				connectButton.setEnabled(true);
 			}
 		});
 	}
@@ -214,6 +222,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 				statusLabel.setText(username);
 				connectButton.setToolTipText("Disconnect from NetAccount");
 				connectButton.setText("Disconnect");
+				connectButton.setEnabled(true);
 				loginMenuItem.setEnabled(false);
 				logoutMenuItem.setEnabled(true);
 			}
@@ -227,7 +236,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 				statusLabel.setText("Not Connected");
 				planLabel.setText("");
 				usageLabel.setText("");
-				connectButton.setText("Connect...");
+				connectButton.setText("Connect");
 				connected = false;
 				loginMenuItem.setEnabled(true);
 				logoutMenuItem.setEnabled(false);

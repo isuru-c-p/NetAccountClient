@@ -89,12 +89,12 @@ public class NetLoginConnection {
 	}
 
 	public void login(final CredentialsCallback callback) {
+		netLogin.connecting();
 		new Thread() {
 			public void run() {
 				String server = NetLoginPreferences.getInstance().getServer();
 				boolean useStaticPingPort = NetLoginPreferences.getInstance().getUseStaticPingPort();
 
-				netLogin.connecting();
 				try {
 					pinger = new PingSender(server, PINGD_PORT, netLogin);
 					if(useStaticPingPort) {
