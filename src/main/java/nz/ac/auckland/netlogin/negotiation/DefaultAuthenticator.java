@@ -31,7 +31,9 @@ public class DefaultAuthenticator implements Authenticator {
 				// try the next one!
 			}
 		}
-		throw new LoginException("No credentials source is available");
+        
+        // if no source is available, cancel the login attempt
+		throw new LoginCancelled();
 	}
 
 	protected boolean handles(Authenticator delegate) {
