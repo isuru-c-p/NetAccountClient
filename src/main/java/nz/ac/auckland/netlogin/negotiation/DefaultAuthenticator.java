@@ -17,6 +17,7 @@ public class DefaultAuthenticator implements Authenticator {
 		Collection<Authenticator> authenticators = AuthenticatorFactory.getInstance().getAuthenticators();
 		for(Authenticator delegate : authenticators) {
 			if (delegate == this) continue;
+			if (!handles(delegate)) continue;
 
 			this.delegate = delegate;
 			try {
@@ -31,6 +32,10 @@ public class DefaultAuthenticator implements Authenticator {
 			}
 		}
 		throw new LoginException("No credentials source is available");
+	}
+
+	protected boolean handles(Authenticator delegate) {
+		return true;
 	}
 
 	public LoginComplete validateResponse(byte[] serverResponse) throws LoginException, IOException {

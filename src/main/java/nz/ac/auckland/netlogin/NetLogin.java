@@ -63,7 +63,7 @@ public class NetLogin {
 						new NetLoginGUI(upi, password);
 					} else {
 						// pure command line with console
-						new NetLoginCLI(upi ,password);
+						new NetLoginCLI(upi, password);
 					}
 				}
 				

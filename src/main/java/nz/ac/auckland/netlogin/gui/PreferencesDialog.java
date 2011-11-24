@@ -21,6 +21,8 @@ public class PreferencesDialog {
 	private JTextField serverText;
 	private JLabel realmLabel;
 	private JTextField realmText;
+	private JLabel reconnectLabel;
+	private JComboBox reconnectCombo;
 
 	public PreferencesDialog(NetLoginPreferences preferences) {
 		this.preferences = preferences;
@@ -47,12 +49,14 @@ public class PreferencesDialog {
 		serverText.setText(preferences.getServer());
 		credentialSourceCombo.setSelectedItem(preferences.getCredentialSource());
         realmText.setText(preferences.getRealm());
+		reconnectCombo.setSelectedItem(preferences.getReconnect() ? "Yes" : "No");
 	}
 
 	public void save() {
 		preferences.setServer(serverText.getText());
 		preferences.setCredentialSource((String)credentialSourceCombo.getSelectedItem());
         preferences.setRealm(realmText.getText());
+		preferences.setReconnect(reconnectCombo.getSelectedItem().equals("Yes"));
 		preferences.savePreferences();
 	}
 
@@ -77,6 +81,9 @@ public class PreferencesDialog {
 
 		realmLabel = new JLabel("Server realm:", JLabel.TRAILING);
 		realmText = new JTextField(20);
+
+		reconnectLabel = new JLabel("Reconnect:", JLabel.TRAILING);
+		reconnectCombo = new JComboBox(new Object[] { "Yes", "No" });
 	}
 
 	protected void registerEvents() {
@@ -96,7 +103,9 @@ public class PreferencesDialog {
 		formPanel.add(credentialSourceCombo);
 		formPanel.add(realmLabel);
 		formPanel.add(realmText);
-		SpringUtilities.makeCompactGrid(formPanel, 3, 2, 5, 5, 5, 5);
+		formPanel.add(reconnectLabel);
+		formPanel.add(reconnectCombo);
+		SpringUtilities.makeCompactGrid(formPanel, 4, 2, 5, 5, 5, 5);
 
 		Box bodyPanel = Box.createVerticalBox();
 		bodyPanel.add(formPanel);

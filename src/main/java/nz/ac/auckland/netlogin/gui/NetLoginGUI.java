@@ -49,12 +49,14 @@ public class NetLoginGUI extends JPanel implements PingListener {
     public NetLoginGUI() {
 		initialize();
 		openWindow();
+		netLoginConnection.monitor();
 	}
 
 	public NetLoginGUI(String upi, String password) {
 		initialize();
 		login(new PopulatedCredentialsCallback(upi, password));
 		minimizeWindow();
+		netLoginConnection.monitor();
 	}
 
 	private void initialize() {
@@ -173,7 +175,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
 					login();
+					netLoginConnection.monitor();
                 } else {
+					netLoginConnection.unmonitor();
 					disconnect();
                 }
 			}

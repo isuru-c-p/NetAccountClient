@@ -11,8 +11,9 @@ public class NetLoginPreferences {
 	private String server = "gate.ec.auckland.ac.nz";
 	private String credentialSource = "Default";
     private String realm = "UOA.AUCKLAND.AC.NZ";
+	private boolean reconnect = true;
 
-    public static NetLoginPreferences getInstance() {
+	public static NetLoginPreferences getInstance() {
 		if (instance == null) instance = new NetLoginPreferences();
 		return instance;
 	}
@@ -89,5 +90,13 @@ public class NetLoginPreferences {
     public void setRealm(String realm) {
         this.realm = realm;
     }
-    
+
+	public boolean getReconnect() {
+		return reconnect;
+	}
+
+	public void setReconnect(boolean reconnect) {
+		this.reconnect = reconnect;
+	}
+	
 }

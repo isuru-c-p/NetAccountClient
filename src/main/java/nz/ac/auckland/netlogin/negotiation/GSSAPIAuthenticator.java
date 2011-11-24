@@ -31,7 +31,7 @@ public class GSSAPIAuthenticator implements Authenticator {
         return "GSSAPI";
     }
 
-    public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
+	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {
         try {
             context = createContext();
 

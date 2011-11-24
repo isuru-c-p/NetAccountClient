@@ -1,6 +1,5 @@
 package nz.ac.auckland.netlogin.negotiation;
 
-import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.Secur32;
 import com.sun.jna.platform.win32.Sspi;
@@ -26,7 +25,7 @@ public class SSPIAuthenticator implements Authenticator {
     public String getName() {
         return "SSPI";
     }
-	
+
 	// http://code.dblock.org/jna-acquirecredentialshandle-initializesecuritycontext-and-acceptsecuritycontext-establishing-an-authenticated-connection
 	// obtaining a spn - http://msdn.microsoft.com/en-us/library/ff649429.aspx
 	public AuthenticationRequest startAuthentication(CredentialsCallback callback) throws LoginException, IOException {

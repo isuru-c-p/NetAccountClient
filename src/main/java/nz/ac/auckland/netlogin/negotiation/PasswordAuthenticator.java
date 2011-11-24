@@ -4,8 +4,6 @@ import nz.ac.auckland.cs.des.C_Block;
 import nz.ac.auckland.cs.des.Key_schedule;
 import nz.ac.auckland.cs.des.desDataInputStream;
 import nz.ac.auckland.cs.des.desDataOutputStream;
-import nz.ac.auckland.netlogin.negotiation.Authenticator;
-import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import javax.security.auth.login.CredentialNotFoundException;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;

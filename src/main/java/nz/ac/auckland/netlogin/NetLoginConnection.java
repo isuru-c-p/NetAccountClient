@@ -7,6 +7,7 @@ import nz.ac.auckland.cs.des.desDataOutputStream;
 import nz.ac.auckland.netlogin.negotiation.Authenticator;
 import nz.ac.auckland.netlogin.negotiation.AuthenticatorFactory;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
+import nz.ac.auckland.netlogin.negotiation.NoCredentialsCallback;
 import javax.security.auth.login.LoginException;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -84,11 +85,34 @@ public class NetLoginConnection {
 	private Authenticator authenticator;
 	private PingListener netLogin;
 
+	private ConnectionState state = ConnectionState.DISCONNECTED;
+	private ConnectionWatcher connectionWatcher;
+
 	public NetLoginConnection(PingListener netLogin) {
 		this.netLogin = netLogin;
 	}
 
-	public void login(final CredentialsCallback callback) {
+	public void monitor() {
+		if (connectionWatcher == null) connectionWatcher = new ConnectionWatcher(this);
+		connectionWatcher.monitor();
+	}
+
+	public void unmonitor() {
+		connectionWatcher.unmonitor();
+	}
+
+	public ConnectionState getState() {
+		return state;
+	}
+
+	public void automaticLogin() {
+		login(new NoCredentialsCallback());
+	}
+
+	public synchronized void login(final CredentialsCallback callback) {
+		if (state != ConnectionState.DISCONNECTED) throw new IllegalStateException("Can only connect when disconnected");
+		state = ConnectionState.CONNECTING;
+		
 		netLogin.connecting();
 		new Thread() {
 			public void run() {
@@ -113,20 +137,24 @@ public class NetLoginConnection {
 					pinger.start();
 
 					NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
-					netLogin.connected(username, ipUsage, plan);
 
+					state = ConnectionState.CONNECTED;
+					netLogin.connected(username, ipUsage, plan);
 				} catch (LoginCancelled e) {
+					state = ConnectionState.DISCONNECTED;
 					netLogin.connectionFailed(null);
 				} catch (Exception e) {
+					state = ConnectionState.DISCONNECTED;
 					netLogin.connectionFailed(e.getMessage());
 				}
 			}
 		}.start();
 	}
 
-	public void logout(){
+	public synchronized void logout() {
 		if (pinger != null) pinger.stopPinging();
 		if (pingReceiver != null) pingReceiver.end();
+		state = ConnectionState.DISCONNECTED;
 	}
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {
