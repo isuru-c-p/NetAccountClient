@@ -1,10 +1,13 @@
 package nz.ac.auckland.netlogin.negotiation;
 
+import nz.ac.auckland.cs.des.C_Block;
 import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 
 public class GSSAPIAuthenticator implements Authenticator {
@@ -47,15 +50,36 @@ public class GSSAPIAuthenticator implements Authenticator {
 
     public LoginComplete validateResponse(byte[] inToken) throws LoginException, IOException {
 
+        DataInputStream in = new DataInputStream(new ByteArrayInputStream(inToken));
+
+        int gssTokenSize = in.readInt();
+        byte[] gssToken = new byte[gssTokenSize];
+        in.readFully(gssToken);
+
+        int payloadWrappedSize = in.readInt();
+        byte[] payloadWrapped = new byte[payloadWrappedSize];
+        in.readFully(payloadWrapped);
+
+        byte[] payload;
         try {
-            byte[] outToken = context.initSecContext(inToken, 0, inToken.length);
-            if (!context.isEstablished() || outToken != null) throw new LoginException("Trust not established after one exchange");
-            throw new LoginException("Now we need to transfer the data!");
+            context.initSecContext(gssToken, 0, gssToken.length);
+            if (!context.isEstablished()) throw new LoginException("Trust not established after one exchange");
+
+            MessageProp messageProp = new MessageProp(0, true);
+            payload = context.unwrap(payloadWrapped, 0, payloadWrapped.length, messageProp);
         } catch (GSSException e) {
             System.err.println("GSSAPI response: " + e.getMessage());
             throw new LoginException("GSSAPI response: " + e.getMessage());
         }
 
+        DataInputStream payloadIn = new DataInputStream(new ByteArrayInputStream(payload));
+        int clientNonce = payloadIn.readInt();
+        int serverNonce = payloadIn.readInt();
+        int sessionKeySize = payloadIn.readInt();
+        byte[] sessionKey = new byte[sessionKeySize];
+        payloadIn.readFully(sessionKey);
+
+        return new LoginComplete(clientNonce, serverNonce, new C_Block(sessionKey));
     }
 
     public static String getServicePrincipalName() {
