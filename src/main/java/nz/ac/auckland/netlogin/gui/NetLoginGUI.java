@@ -20,12 +20,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private Window window;
     private JFrame iconifiableWindow;
 
-	private JLabel upiTitle = new JLabel("NetID/UPI:  ");
-	private JLabel planTitle = new JLabel("Internet Plan:  ");
-	private JLabel usageTitle = new JLabel("MBs used this month:  ");
-	private JLabel statusLabel = new JLabel("Not Connected");
-	private JLabel planLabel = new JLabel("");
-	private JLabel usageLabel = new JLabel("");
+	private JLabel userLabel;
+	private JLabel planLabel;
+	private JLabel usageLabel;
 
 	private NetLoginPreferences preferences;
 
@@ -40,8 +37,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private NetLoginConnection netLoginConnection;
 	private boolean connected = false;
 
-	private final Color labelColor = new Color(51, 102, 255);
-    
 	private boolean useSystemTray = true;
 	private TrayIcon trayIcon;
 
@@ -49,6 +44,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
 
     private JPanel mainPanel;
+	private JPanel bodyPanel;
 
     public NetLoginGUI() {
 		initialize();
@@ -143,6 +139,30 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		preferencesDialog = new PreferencesDialog(preferences);
 		aboutDialog = new AboutDialog();
 
+		JLabel upiTitle = new JLabel("NetID/UPI: ");
+		JLabel planTitle = new JLabel("Internet Plan: ");
+		JLabel usageTitle = new JLabel("Used this month: ");
+		userLabel = new JLabel("Not Connected");
+		planLabel = new JLabel("");
+		usageLabel = new JLabel("");
+
+		Font labelFont = upiTitle.getFont();
+		Font valueFont = upiTitle.getFont().deriveFont(Font.BOLD);
+		Color labelColor = Color.BLACK;
+		Color valueColor = Color.BLACK; //new Color(51, 102, 255);
+
+		userLabel.setFont(valueFont);
+		planLabel.setFont(valueFont);
+		usageLabel.setFont(valueFont);
+
+		userLabel.setForeground(valueColor);
+		planLabel.setForeground(valueColor);
+		usageLabel.setForeground(valueColor);
+
+		upiTitle.setFont(labelFont);
+		planTitle.setFont(labelFont);
+		usageTitle.setFont(labelFont);
+
 		upiTitle.setForeground(labelColor);
 		planTitle.setForeground(labelColor);
 		usageTitle.setForeground(labelColor);
@@ -159,20 +179,28 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			}
 		});
 
-		JPanel bodyPanel = new JPanel();
+		JPanel connectedPanel = new JPanel();
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
-        bodyPanel.setLayout(gbl);
+        connectedPanel.setLayout(gbl);
 		gbc.weightx = 1.0;
 		gbc.weighty = 1.0;
 		gbc.anchor = CENTER;
 
-		addExternal(bodyPanel, gbc, 0, 0, upiTitle, VERTICAL, EAST);
-		addExternal(bodyPanel, gbc, 0, 1, planTitle, VERTICAL, EAST);
-		addExternal(bodyPanel, gbc, 0, 2, usageTitle, VERTICAL, EAST);
-		addExternal(bodyPanel, gbc, 1, 0, statusLabel, VERTICAL, WEST);
-		addExternal(bodyPanel, gbc, 1, 1, planLabel, VERTICAL, WEST);
-		addExternal(bodyPanel, gbc, 1, 2, usageLabel, VERTICAL, WEST);
+		addExternal(connectedPanel, gbc, 0, 0, upiTitle, VERTICAL, EAST);
+		addExternal(connectedPanel, gbc, 0, 1, planTitle, VERTICAL, EAST);
+		addExternal(connectedPanel, gbc, 0, 2, usageTitle, VERTICAL, EAST);
+		addExternal(connectedPanel, gbc, 1, 0, userLabel, VERTICAL, WEST);
+		addExternal(connectedPanel, gbc, 1, 1, planLabel, VERTICAL, WEST);
+		addExternal(connectedPanel, gbc, 1, 2, usageLabel, VERTICAL, WEST);
+
+		JComponent disconnectedPanel = createMessagePanel("Not Connected", valueFont, valueColor, null);
+		JComponent connectingPanel = createMessagePanel("Connecting...", valueFont, valueColor, Icons.getInstance().getSpinner());
+		
+		bodyPanel = new JPanel(new CardLayout());
+		bodyPanel.add("disconnected", disconnectedPanel);
+		bodyPanel.add("connecting", connectingPanel);
+		bodyPanel.add("connected", connectedPanel);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 7));
 		buttonPanel.add(connectButton);
@@ -182,6 +210,20 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		mainPanel.add(bodyPanel);
 		mainPanel.add(new JSeparator());
 		mainPanel.add(buttonPanel);
+	}
+
+	private JComponent createMessagePanel(String text, Font font, Color color, Image image) {
+		JLabel connectingLabel = new JLabel(text);
+		connectingLabel.setFont(font);
+		connectingLabel.setForeground(color);
+		if (image != null) connectingLabel.setIcon(new ImageIcon(image));
+		JPanel connectingLabelContainer = new JPanel(new FlowLayout());
+		connectingLabelContainer.add(connectingLabel);
+		Box connectingPanel = Box.createVerticalBox();
+		connectingPanel.add(Box.createVerticalGlue());
+		connectingPanel.add(connectingLabelContainer);
+		connectingPanel.add(Box.createVerticalGlue());
+		return connectingPanel;
 	}
 
 	private void addExternal(JPanel panel, GridBagConstraints constraints, int x, int y, JComponent c, int fill, int anchor) {
@@ -200,7 +242,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(false);
-				statusLabel.setText("Connecting...");
+				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "connecting");
 			}
 		});
 	}
@@ -208,36 +250,38 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	public void connectionFailed(final String message) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if (message != null) JOptionPane.showMessageDialog(NetLoginGUI.this, "NetLogin - " + message);
-				statusLabel.setText("Unable to connect");
 				connectButton.setEnabled(true);
+				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "disconnected");
+				if (message != null) JOptionPane.showMessageDialog(NetLoginGUI.this, "NetLogin - " + message);
 			}
 		});
 	}
 
 	public void connected(final String username, int ipUsage, NetLoginPlan plan) {
 		this.connected = true;
+		update(ipUsage, plan);
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				statusLabel.setText(username);
+				userLabel.setText(username);
 				connectButton.setToolTipText("Disconnect from NetAccount");
 				connectButton.setText("Disconnect");
 				connectButton.setEnabled(true);
+				((CardLayout) bodyPanel.getLayout()).show(bodyPanel, "connected");
+
 				loginMenuItem.setEnabled(false);
 				logoutMenuItem.setEnabled(true);
+				updateTrayLabel();
 			}
 		});
-		update(ipUsage, plan);
 	}
 
 	public void disconnected() {
+		this.connected = false;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				statusLabel.setText("Not Connected");
-				planLabel.setText("");
-				usageLabel.setText("");
 				connectButton.setText("Connect");
-				connected = false;
+				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "disconnected");
+
 				loginMenuItem.setEnabled(true);
 				logoutMenuItem.setEnabled(false);
 				updateTrayLabel();
@@ -251,7 +295,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 				float ipUsageMb = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
 				usageLabel.setText("" + ipUsageMb + "MBs");
 				planLabel.setText(plan.toString());
-				updateTrayLabel();
 			}
 		});
 	}

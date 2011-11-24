@@ -30,7 +30,7 @@ public class Icons {
         iconConnected = loadImage("StatusIconConnected.png");
         iconConnecting = loadImage("StatusIconConnecting.png");
         iconDisconnected = loadImage("StatusIconDisconnected.png");
-		spinner = loadImage("Spinner.png");
+		spinner = loadImage("Spinner.gif");
 
 		windowIcons = new ArrayList<Image>();
 		for(int iconSize : windowIconSizes) {
@@ -40,7 +40,9 @@ public class Icons {
 
 	private Image loadImage(String imageName) {
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		return toolkit.getImage(this.getClass().getResource("/" + imageName));
+		Image image = toolkit.getImage(this.getClass().getResource("/" + imageName));
+		if (image == null) throw new RuntimeException("Image not found: " + imageName);
+		return image;
 	}
 
 	public Image getConnectedIcon() {
