@@ -45,7 +45,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
     
 	private boolean useSystemTray = true;
 	private TrayIcon trayIcon;
-	private String planName = "";
 
 	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
@@ -197,14 +196,14 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	private void disconnect() {
 		netLoginConnection.logout();
-		
-		statusLabel.setText("Not Connected");
-		planLabel.setText("");
-		usageLabel.setText("");
-		connectButton.setText("Connect...");
-		connected = false;
-		loginMenuItem.setEnabled(true);
-		logoutMenuItem.setEnabled(false);
+	}
+
+	public void connecting() {
+		statusLabel.setText("Connecting...");
+	}
+
+	public void connectionFailed() {
+		statusLabel.setText("Unable to connect");
 	}
 
 	public void connected(String username, int ipUsage, NetLoginPlan plan) {
@@ -219,7 +218,13 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public void disconnected() {
-		disconnect();
+		statusLabel.setText("Not Connected");
+		planLabel.setText("");
+		usageLabel.setText("");
+		connectButton.setText("Connect...");
+		connected = false;
+		loginMenuItem.setEnabled(true);
+		logoutMenuItem.setEnabled(false);
 		updateTrayLabel();
 	}
 
@@ -324,9 +329,8 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	public void updateTrayLabel() {
 		if (trayIcon == null) return;
 
-		String label = "Status:Disconnected";
-		if (connected) label = "Status:Connected" + " InternetPlan:" + planName;
-        
+		String label = "Disconnected";
+		if (connected) label = "Connected";
 		trayIcon.setToolTip(label);
 
         if (connected) {
@@ -334,7 +338,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
         } else {
             trayIcon.setImage(Icons.getInstance().getDisconnectedIcon());
         }
-        
 	}
 
 	private void initTrayIcon() {

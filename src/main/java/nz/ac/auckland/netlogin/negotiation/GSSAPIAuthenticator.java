@@ -49,7 +49,6 @@ public class GSSAPIAuthenticator implements Authenticator {
     }
 
     public LoginComplete validateResponse(byte[] inToken) throws LoginException, IOException {
-
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(inToken));
 
         int gssTokenSize = in.readInt();
@@ -73,12 +72,12 @@ public class GSSAPIAuthenticator implements Authenticator {
         }
 
         DataInputStream payloadIn = new DataInputStream(new ByteArrayInputStream(payload));
-        int clientNonce = payloadIn.readInt();
         int serverNonce = payloadIn.readInt();
         int sessionKeySize = payloadIn.readInt();
         byte[] sessionKey = new byte[sessionKeySize];
         payloadIn.readFully(sessionKey);
 
+		int clientNonce = 0; // only used for ping sequence
         return new LoginComplete(clientNonce, serverNonce, new C_Block(sessionKey));
     }
 

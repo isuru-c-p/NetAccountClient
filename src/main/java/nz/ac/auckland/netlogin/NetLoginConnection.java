@@ -47,7 +47,7 @@ public class NetLoginConnection {
 
 	int clientNonce;
 	int serverNonce;
-	int Sequence_Number = 0;
+	int sequence = 0;
 
 	Key_schedule schedule = null;				//set up encryption key to the users passwd
 	int clientType = NETGUARDIAN_JAVA_CLIENT; 	//We are a multiuser client today
@@ -70,8 +70,7 @@ public class NetLoginConnection {
 	int responsePort;  //Our Port. the Server sends Ping responses to it
 
 	PingSender pinger = null;
-	PingRespHandler ping_receiver = null;
-	boolean useStaticPingPort = false;
+	PingRespHandler pingReceiver = null;
 	String username;
 
 	int onPlan; 					//True of False. Used in ping packets & Statusd. in net byte order
@@ -91,37 +90,40 @@ public class NetLoginConnection {
 
 	public void login(CredentialsCallback callback) throws IOException, LoginException {
 		String server = NetLoginPreferences.getInstance().getServer();
-		setUseStaticPingPort(NetLoginPreferences.getInstance().getUseStaticPingPort());
-		
-		pinger = new PingSender( server, PINGD_PORT, netLogin );
-		if( useStaticPingPort ){
-			ping_receiver = new PingRespHandler( netLogin, pinger, pinger.getSocket() );
-			responsePort = 0;
-		} else {
-			ping_receiver = new PingRespHandler( netLogin, pinger );
-			responsePort = ping_receiver.getLocalPort();
+		boolean useStaticPingPort = NetLoginPreferences.getInstance().getUseStaticPingPort();
+
+		netLogin.connecting();
+		boolean connected = false;
+		try {
+			pinger = new PingSender( server, PINGD_PORT, netLogin );
+			if(useStaticPingPort){
+				pingReceiver = new PingRespHandler(netLogin, pinger, pinger.getSocket());
+				responsePort = 0;
+			} else {
+				pingReceiver = new PingRespHandler(netLogin, pinger);
+				responsePort = pingReceiver.getLocalPort();
+			}
+
+			authenticate(server, callback);
+
+			pinger.prepare(schedule, authRef, serverNonce + 2, sequence);
+			pingReceiver.prepare(clientNonce + 3, sequence, schedule);
+			pingReceiver.start();
+			pinger.start();
+
+			NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
+			netLogin.connected(username, ipUsage, plan);
+			connected = true;
+		} finally {
+			if (!connected) netLogin.connectionFailed();
 		}
-
-		authenticate( server, callback );
-		
-		pinger.prepare( schedule, authRef, serverNonce + 2, Sequence_Number );
-		ping_receiver.prepare( clientNonce + 3, Sequence_Number, schedule );
-		ping_receiver.start();
-		pinger.start();
-
-        NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
-		netLogin.connected(username, ipUsage, plan);
-	}
-
-	public void setUseStaticPingPort( boolean b ){
-		useStaticPingPort = b;
 	}
 
 	public void logout(){
 		if( pinger != null )
 			pinger.stopPinging();
-		if( ping_receiver != null )
-			ping_receiver.end();
+		if( pingReceiver != null )
+			pingReceiver.end();
 	}
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {

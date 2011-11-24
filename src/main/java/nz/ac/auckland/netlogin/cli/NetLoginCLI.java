@@ -31,6 +31,12 @@ public class NetLoginCLI implements PingListener {
 		}
 	}
 
+	public void connecting() {
+	}
+
+	public void connectionFailed() {
+	}
+
 	public void connected(String username, int ipUsage, NetLoginPlan plan) {
 		System.out.println("Status:Connected");
 		System.out.println("UPI:" + username);
