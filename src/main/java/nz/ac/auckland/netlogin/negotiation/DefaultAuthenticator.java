@@ -1,6 +1,6 @@
 package nz.ac.auckland.netlogin.negotiation;
 
-import javax.security.auth.login.CredentialNotFoundException;
+import nz.ac.auckland.netlogin.LoginCancelled;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.util.Collection;
@@ -21,7 +21,7 @@ public class DefaultAuthenticator implements Authenticator {
 			this.delegate = delegate;
 			try {
 				return delegate.startAuthentication(callback);
-			} catch (CredentialNotFoundException e) {
+			} catch (LoginCancelled e) {
 				// user elected not to supply credentials, stop processing
 				throw e;
 			} catch (LoginException e) {
