@@ -1,5 +1,6 @@
 package nz.ac.auckland.netlogin.gui;
 
+import nz.ac.auckland.netlogin.LoginCancelled;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.util.SpringUtilities;
 import javax.swing.*;
@@ -8,7 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
 import java.beans.EventHandler;
-import java.util.EventListener;
+import java.lang.reflect.InvocationTargetException;
 
 public class LoginDialog implements CredentialsCallback {
 
@@ -132,19 +133,30 @@ public class LoginDialog implements CredentialsCallback {
 		close();
 	}
 
-	public boolean requestCredentials() {
-		open();
+	public boolean requestCredentials() throws LoginCancelled {
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					open();
 
-		// wait until the dialog is closed
-		while (dialog.isVisible()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// ignore and continue
-			}
+					// wait until the dialog is closed
+					while (dialog.isVisible()) {
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							// ignore and continue
+						}
+					}
+				}
+			});
+		} catch (InterruptedException e) {
+			return false;
+		} catch (InvocationTargetException e) {
+			return false;
 		}
 
-		return valid;
+		if (!valid) throw new LoginCancelled();
+		return true;
 	}
 
 	public String getUsername() {
@@ -155,10 +167,6 @@ public class LoginDialog implements CredentialsCallback {
 		String password = passwordText.getText();
 		clearPassword();
 		return password;
-	}
-
-	public static interface LoginListener extends EventListener {
-		public void login(String username, String password);
 	}
 
 }

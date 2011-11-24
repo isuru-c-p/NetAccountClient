@@ -88,42 +88,45 @@ public class NetLoginConnection {
 		this.netLogin = netLogin;
 	}
 
-	public void login(CredentialsCallback callback) throws IOException, LoginException {
-		String server = NetLoginPreferences.getInstance().getServer();
-		boolean useStaticPingPort = NetLoginPreferences.getInstance().getUseStaticPingPort();
+	public void login(final CredentialsCallback callback) {
+		new Thread() {
+			public void run() {
+				String server = NetLoginPreferences.getInstance().getServer();
+				boolean useStaticPingPort = NetLoginPreferences.getInstance().getUseStaticPingPort();
 
-		netLogin.connecting();
-		boolean connected = false;
-		try {
-			pinger = new PingSender( server, PINGD_PORT, netLogin );
-			if(useStaticPingPort){
-				pingReceiver = new PingRespHandler(netLogin, pinger, pinger.getSocket());
-				responsePort = 0;
-			} else {
-				pingReceiver = new PingRespHandler(netLogin, pinger);
-				responsePort = pingReceiver.getLocalPort();
+				netLogin.connecting();
+				try {
+					pinger = new PingSender(server, PINGD_PORT, netLogin);
+					if(useStaticPingPort) {
+						pingReceiver = new PingRespHandler(netLogin, pinger, pinger.getSocket());
+						responsePort = 0;
+					} else {
+						pingReceiver = new PingRespHandler(netLogin, pinger);
+						responsePort = pingReceiver.getLocalPort();
+					}
+
+					authenticate(server, callback);
+
+					pinger.prepare(schedule, authRef, serverNonce + 2, sequence);
+					pingReceiver.prepare(clientNonce + 3, sequence, schedule);
+					pingReceiver.start();
+					pinger.start();
+
+					NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
+					netLogin.connected(username, ipUsage, plan);
+
+				} catch (LoginCancelled e) {
+					netLogin.connectionFailed(null);
+				} catch (Exception e) {
+					netLogin.connectionFailed(e.getMessage());
+				}
 			}
-
-			authenticate(server, callback);
-
-			pinger.prepare(schedule, authRef, serverNonce + 2, sequence);
-			pingReceiver.prepare(clientNonce + 3, sequence, schedule);
-			pingReceiver.start();
-			pinger.start();
-
-			NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
-			netLogin.connected(username, ipUsage, plan);
-			connected = true;
-		} finally {
-			if (!connected) netLogin.connectionFailed();
-		}
+		}.start();
 	}
 
 	public void logout(){
-		if( pinger != null )
-			pinger.stopPinging();
-		if( pingReceiver != null )
-			pingReceiver.end();
+		if (pinger != null) pinger.stopPinging();
+		if (pingReceiver != null) pingReceiver.end();
 	}
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {

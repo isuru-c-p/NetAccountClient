@@ -1,8 +1,10 @@
 package nz.ac.auckland.netlogin.negotiation;
 
+import nz.ac.auckland.netlogin.LoginCancelled;
+
 public interface CredentialsCallback {
 
-	boolean requestCredentials();
+	boolean requestCredentials() throws LoginCancelled;
 
 	String getUsername();
 

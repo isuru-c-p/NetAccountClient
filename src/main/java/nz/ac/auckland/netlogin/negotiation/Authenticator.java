@@ -34,14 +34,18 @@ public interface Authenticator {
 
 	public static class LoginComplete {
 
-		private int clientNonce;
+		private int clientNonce = 0;
 		private int serverNonce;
 		private C_Block sessionKey;
 
-		public LoginComplete(int clientNonce, int serverNonce, C_Block sessionKey) {
-			this.clientNonce = clientNonce;
+		public LoginComplete(int serverNonce, C_Block sessionKey) {
 			this.serverNonce = serverNonce;
 			this.sessionKey = sessionKey;
+		}
+
+		public LoginComplete(int clientNonce, int serverNonce, C_Block sessionKey) {
+			this(serverNonce, sessionKey);
+			this.clientNonce = clientNonce;
 		}
 
 		public int getClientNonce() {

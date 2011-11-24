@@ -7,7 +7,6 @@ import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 import nz.ac.auckland.netlogin.util.SystemSettings;
-import javax.security.auth.login.CredentialNotFoundException;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
@@ -118,14 +117,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	protected void login(CredentialsCallback callback) {
-		try {
-			netLoginConnection.login(callback);
-		} catch (CredentialNotFoundException e) {
-			// user cancelled, ignore
-		} catch (Exception e) {
-            //e.printStackTrace();
-			showError(e.getMessage());
-		}
+		netLoginConnection.login(callback);
 	}
 
 	public boolean isSystemTraySupported() {
@@ -199,40 +191,59 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public void connecting() {
-		statusLabel.setText("Connecting...");
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				statusLabel.setText("Connecting...");
+			}
+		});
 	}
 
-	public void connectionFailed() {
-		statusLabel.setText("Unable to connect");
+	public void connectionFailed(String message) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				statusLabel.setText("Unable to connect");
+			}
+		});
 	}
 
-	public void connected(String username, int ipUsage, NetLoginPlan plan) {
+	public void connected(final String username, int ipUsage, NetLoginPlan plan) {
 		this.connected = true;
-		statusLabel.setText(username);
-		connectButton.setToolTipText("Disconnect from NetAccount");
-		connectButton.setText("Disconnect");
-		loginMenuItem.setEnabled(false);
-		logoutMenuItem.setEnabled(true);
-
-		update(ipUsage, plan, null);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				statusLabel.setText(username);
+				connectButton.setToolTipText("Disconnect from NetAccount");
+				connectButton.setText("Disconnect");
+				loginMenuItem.setEnabled(false);
+				logoutMenuItem.setEnabled(true);
+			}
+		});
+		update(ipUsage, plan);
 	}
 
 	public void disconnected() {
-		statusLabel.setText("Not Connected");
-		planLabel.setText("");
-		usageLabel.setText("");
-		connectButton.setText("Connect...");
-		connected = false;
-		loginMenuItem.setEnabled(true);
-		logoutMenuItem.setEnabled(false);
-		updateTrayLabel();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				statusLabel.setText("Not Connected");
+				planLabel.setText("");
+				usageLabel.setText("");
+				connectButton.setText("Connect...");
+				connected = false;
+				loginMenuItem.setEnabled(true);
+				logoutMenuItem.setEnabled(false);
+				updateTrayLabel();
+			}
+		});
 	}
 
-	public void update(int ipUsage, NetLoginPlan plan, String message) {
-		float ipUsageMb = (float)(Math.round((ipUsage / 1024.0) * 100)) / 100;
-		usageLabel.setText("" + ipUsageMb + "MBs");
-		planLabel.setText(plan.toString());
-		updateTrayLabel();
+	public void update(final int ipUsage, final NetLoginPlan plan) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				float ipUsageMb = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
+				usageLabel.setText("" + ipUsageMb + "MBs");
+				planLabel.setText(plan.toString());
+				updateTrayLabel();
+			}
+		});
 	}
 
 	private void showError(String errorMsg) {

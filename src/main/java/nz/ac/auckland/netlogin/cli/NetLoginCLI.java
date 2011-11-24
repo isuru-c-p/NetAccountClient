@@ -34,14 +34,15 @@ public class NetLoginCLI implements PingListener {
 	public void connecting() {
 	}
 
-	public void connectionFailed() {
+	public void connectionFailed(String message) {
+		if (message != null) System.out.println(message);
 	}
 
 	public void connected(String username, int ipUsage, NetLoginPlan plan) {
 		System.out.println("Status:Connected");
 		System.out.println("UPI:" + username);
 
-		update(ipUsage, plan, null);
+		update(ipUsage, plan);
 	}
 
 	public void disconnected() {
@@ -50,7 +51,7 @@ public class NetLoginCLI implements PingListener {
 			System.exit(0);
 	}
 
-	public void update(int ipUsage, NetLoginPlan plan, String message) {
+	public void update(int ipUsage, NetLoginPlan plan) {
 		float MBs_usage = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
         
 		if (this.displayStatus) {

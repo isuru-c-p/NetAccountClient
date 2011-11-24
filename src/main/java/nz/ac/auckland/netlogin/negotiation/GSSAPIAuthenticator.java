@@ -77,8 +77,7 @@ public class GSSAPIAuthenticator implements Authenticator {
         byte[] sessionKey = new byte[sessionKeySize];
         payloadIn.readFully(sessionKey);
 
-		int clientNonce = 0; // only used for ping sequence
-        return new LoginComplete(clientNonce, serverNonce, new C_Block(sessionKey));
+        return new LoginComplete(serverNonce, new C_Block(sessionKey));
     }
 
     public static String getServicePrincipalName() {

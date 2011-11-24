@@ -60,7 +60,6 @@ public class PingRespHandler extends Thread {
 		byte recvBytes[] = new byte[ 8192 ];
 		DatagramPacket incomingPacket;
 		desDataInputStream des_in;
-		byte message[];
 		int random_returned;
 		int Seq_number_returned;
 		int packet_length;
@@ -116,12 +115,13 @@ public class PingRespHandler extends Thread {
 				onPlan = des_in.readInt();
 				
 				message_length = des_in.readInt();
-				message = new byte[message_length];
-				des_in.read(message);
+				byte[] messageBytes = new byte[message_length];
+				des_in.read(messageBytes);
+				String message = new String(messageBytes);
 
                 NetLoginPlan plan = NetLoginPlan.lookupPlanFromFlags(onPlan);
 
-				netLogin.update(ipUsage, plan, new String(message));
+				netLogin.update(ipUsage, plan);
 
 				bad = 0; //start error trapping again.
 				pinger.zeroOutstandingPings();
