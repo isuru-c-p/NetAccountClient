@@ -6,6 +6,7 @@ import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
+import nz.ac.auckland.netlogin.util.SpringUtilities;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -13,7 +14,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.EventHandler;
 import java.lang.reflect.Method;
-import static java.awt.GridBagConstraints.*;
 
 public class NetLoginGUI extends JPanel implements PingListener {
 
@@ -139,12 +139,12 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		preferencesDialog = new PreferencesDialog(preferences);
 		aboutDialog = new AboutDialog();
 
-		JLabel upiTitle = new JLabel("NetID/UPI: ");
-		JLabel planTitle = new JLabel("Internet Plan: ");
-		JLabel usageTitle = new JLabel("Used this month: ");
+		JLabel upiTitle = new JLabel("NetID/UPI:", JLabel.RIGHT);
+		JLabel planTitle = new JLabel("Internet Plan:", JLabel.RIGHT);
+		JLabel usageTitle = new JLabel("Used this month:", JLabel.RIGHT);
 		userLabel = new JLabel("Not Connected");
-		planLabel = new JLabel("");
-		usageLabel = new JLabel("");
+		planLabel = new JLabel();
+		usageLabel = new JLabel();
 
 		Font labelFont = upiTitle.getFont();
 		Font valueFont = upiTitle.getFont().deriveFont(Font.BOLD);
@@ -179,20 +179,14 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			}
 		});
 
-		JPanel connectedPanel = new JPanel();
-		GridBagLayout gbl = new GridBagLayout();
-		GridBagConstraints gbc = new GridBagConstraints();
-        connectedPanel.setLayout(gbl);
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.anchor = CENTER;
-
-		addExternal(connectedPanel, gbc, 0, 0, upiTitle, VERTICAL, EAST);
-		addExternal(connectedPanel, gbc, 0, 1, planTitle, VERTICAL, EAST);
-		addExternal(connectedPanel, gbc, 0, 2, usageTitle, VERTICAL, EAST);
-		addExternal(connectedPanel, gbc, 1, 0, userLabel, VERTICAL, WEST);
-		addExternal(connectedPanel, gbc, 1, 1, planLabel, VERTICAL, WEST);
-		addExternal(connectedPanel, gbc, 1, 2, usageLabel, VERTICAL, WEST);
+		JPanel connectedPanel = new JPanel(new SpringLayout());
+		connectedPanel.add(upiTitle);
+		connectedPanel.add(userLabel);
+		connectedPanel.add(planTitle);
+		connectedPanel.add(planLabel);
+		connectedPanel.add(usageTitle);
+		connectedPanel.add(usageLabel);
+		SpringUtilities.makeCompactGrid(connectedPanel, 3, 2, 5, 5, 5, 5);
 
 		JComponent disconnectedPanel = createMessagePanel("Not Connected", valueFont, valueColor, null);
 		JComponent connectingPanel = createMessagePanel("Connecting...", valueFont, valueColor, Icons.getInstance().getSpinner());
@@ -200,7 +194,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		bodyPanel = new JPanel(new CardLayout());
 		bodyPanel.add("disconnected", disconnectedPanel);
 		bodyPanel.add("connecting", connectingPanel);
-		bodyPanel.add("connected", connectedPanel);
+		bodyPanel.add("connected", alignHorizontally(connectedPanel));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 7));
 		buttonPanel.add(connectButton);
@@ -213,25 +207,29 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	private JComponent createMessagePanel(String text, Font font, Color color, Image image) {
-		JLabel connectingLabel = new JLabel(text);
-		connectingLabel.setFont(font);
-		connectingLabel.setForeground(color);
-		if (image != null) connectingLabel.setIcon(new ImageIcon(image));
-		JPanel connectingLabelContainer = new JPanel(new FlowLayout());
-		connectingLabelContainer.add(connectingLabel);
-		Box connectingPanel = Box.createVerticalBox();
-		connectingPanel.add(Box.createVerticalGlue());
-		connectingPanel.add(connectingLabelContainer);
-		connectingPanel.add(Box.createVerticalGlue());
+		JLabel messageLabel = new JLabel(text);
+		messageLabel.setFont(font);
+		messageLabel.setForeground(color);
+		if (image != null) messageLabel.setIcon(new ImageIcon(image));
+		JPanel messagePanel = new JPanel(new FlowLayout());
+		messagePanel.add(messageLabel);
+		return alignVertically(messagePanel);
+	}
+
+	private JComponent alignHorizontally(JComponent component) {
+		Box connectingPanel = Box.createHorizontalBox();
+		connectingPanel.add(Box.createHorizontalGlue());
+		connectingPanel.add(component);
+		connectingPanel.add(Box.createHorizontalGlue());
 		return connectingPanel;
 	}
 
-	private void addExternal(JPanel panel, GridBagConstraints constraints, int x, int y, JComponent c, int fill, int anchor) {
-		constraints.gridx = x;
-		constraints.gridy = y;
-		constraints.fill = fill;
-		constraints.anchor = anchor;
-		panel.add(c, constraints);
+	private JComponent alignVertically(JComponent component) {
+		Box connectingPanel = Box.createVerticalBox();
+		connectingPanel.add(Box.createVerticalGlue());
+		connectingPanel.add(component);
+		connectingPanel.add(Box.createVerticalGlue());
+		return connectingPanel;
 	}
 
 	private void disconnect() {
@@ -263,11 +261,12 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				userLabel.setText(username);
+				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "connected");
+
 				connectButton.setToolTipText("Disconnect from NetAccount");
 				connectButton.setText("Disconnect");
 				connectButton.setEnabled(true);
-				((CardLayout) bodyPanel.getLayout()).show(bodyPanel, "connected");
-
+				
 				loginMenuItem.setEnabled(false);
 				logoutMenuItem.setEnabled(true);
 				updateTrayLabel();
@@ -293,8 +292,11 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				float ipUsageMb = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
-				usageLabel.setText("" + ipUsageMb + "MBs");
+				usageLabel.setText("" + ipUsageMb + " MBs");
+				usageLabel.invalidate();
 				planLabel.setText(plan.toString());
+				planLabel.invalidate();
+				planLabel.getParent().validate();
 			}
 		});
 	}
