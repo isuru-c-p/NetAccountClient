@@ -1,5 +1,6 @@
 package nz.ac.auckland.netlogin;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -32,12 +33,10 @@ public class NetLoginPreferences {
 			if (value == null) continue;
 
 			try {
-				PropertyUtils.setProperty(this, name, value);
+				BeanUtils.setProperty(this, name, value);
 			} catch (IllegalAccessException e) {
 				System.err.printf("Unable to load preference %s: %s\n", name, e.getMessage());
 			} catch (InvocationTargetException e) {
-				System.err.printf("Unable to load preference %s: %s\n", name, e.getMessage());
-			} catch (NoSuchMethodException e) {
 				System.err.printf("Unable to load preference %s: %s\n", name, e.getMessage());
 			}
 		}
