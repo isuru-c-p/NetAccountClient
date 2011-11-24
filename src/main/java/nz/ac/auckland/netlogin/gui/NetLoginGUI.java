@@ -198,9 +198,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		});
 	}
 
-	public void connectionFailed(String message) {
+	public void connectionFailed(final String message) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				if (message != null) JOptionPane.showMessageDialog(NetLoginGUI.this, "NetLogin - " + message);
 				statusLabel.setText("Unable to connect");
 			}
 		});
@@ -244,11 +245,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 				updateTrayLabel();
 			}
 		});
-	}
-
-	private void showError(String errorMsg) {
-		JOptionPane.showMessageDialog(this, "NetLogin - " + errorMsg);
-		disconnect();
 	}
 
 	private JMenuBar createMenuBar() {
