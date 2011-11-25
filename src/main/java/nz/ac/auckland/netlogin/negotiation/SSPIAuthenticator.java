@@ -1,10 +1,7 @@
 package nz.ac.auckland.netlogin.negotiation;
 
 import com.sun.jna.NativeLong;
-import com.sun.jna.platform.win32.Secur32;
-import com.sun.jna.platform.win32.Sspi;
-import com.sun.jna.platform.win32.W32Errors;
-import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.NativeLongByReference;
 import nz.ac.auckland.cs.des.C_Block;
 import javax.security.auth.login.LoginException;
@@ -37,7 +34,8 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
-        /*
+        throw new LoginException("SSPI unwrap not implemented");
+/*
         wrap_buf_desc.cBuffers = 2;
         wrap_buf_desc.pBuffers = wrap_bufs;
         wrap_buf_desc.ulVersion = SECBUFFER_VERSION;
@@ -61,15 +59,13 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 // This is where the data is.
         msg_buf = wrap_bufs[1];
 */
-        throw new LoginException("SSPI unwrap not implemented");
     }
 
     protected String getUserName() {
-        // GSSAPIAuthenticator.getServicePrincipalName();
-        return "regg002";
+        return Advapi32Util.getUserName();
     }
 
-    public void initializeContext() throws LoginException {
+    protected void initializeContext() throws LoginException {
 		assert phClientCredential == null;
 		assert phClientContext == null;
 
@@ -77,6 +73,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
         phClientCredential = new Sspi.CredHandle();
         Sspi.TimeStamp ptsClientExpiry = new Sspi.TimeStamp();
 
+        // http://msdn.microsoft.com/en-us/library/windows/desktop/aa374713%28v=VS.85%29.aspx
         int responseCode = Secur32.INSTANCE.AcquireCredentialsHandle(
                 null,
                 authenticationMechanism,
@@ -98,7 +95,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
         
     }
 
-    public byte[] initSecContext(byte[] gssToken) throws LoginException {
+    protected byte[] initSecContext(byte[] gssToken) throws LoginException {
 		assert phClientCredential != null;
 		assert phClientContext != null;
 
@@ -113,11 +110,12 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
         Sspi.SecBufferDesc pbClientToken = new Sspi.SecBufferDesc(Sspi.SECBUFFER_TOKEN, Sspi.MAX_TOKEN_SIZE);
 
         // server token is empty the first time
+        // http://msdn.microsoft.com/en-us/library/windows/desktop/aa375507%28v=VS.85%29.aspx
         int clientRc = Secur32.INSTANCE.InitializeSecurityContext(
                 phClientCredential,
                 phClientContext.isNull() ? null : phClientContext,
                 targetPrincipal,
-                new NativeLong(Sspi.ISC_REQ_CONNECTION | Sspi.ISC_REQ_CONFIDENTIALITY | Sspi.ISC_REQ_INTEGRITY | Sspi.ISC_REQ_REPLAY_DETECT),
+                new NativeLong(Sspi.ISC_REQ_CONNECTION), // | Sspi.ISC_REQ_CONFIDENTIALITY | Sspi.ISC_REQ_INTEGRITY | Sspi.ISC_REQ_REPLAY_DETECT),
                 new NativeLong(0),
                 new NativeLong(Sspi.SECURITY_NATIVE_DREP),
                 pbServerToken,
@@ -135,7 +133,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
         throw handleError(clientRc);
 	}
 
-    public void cleanup() {
+    protected void cleanup() {
         // release client context
         if (phClientContext != null) {
             if (!phClientContext.isNull()) Secur32.INSTANCE.DeleteSecurityContext(phClientContext);

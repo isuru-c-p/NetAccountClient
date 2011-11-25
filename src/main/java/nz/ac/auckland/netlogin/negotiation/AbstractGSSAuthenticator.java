@@ -31,7 +31,7 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
         byte[] outToken = initSecContext(null);
         if (outToken == null) throw new LoginException("No authentication token produced");
 
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream(outToken.length + 4);
         outStream.write("gss:".getBytes());
         outStream.write(outToken);
 
@@ -43,15 +43,18 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(serverResponse));
 
         int gssTokenSize = in.readInt();
+        System.err.println("GSS token is " + gssTokenSize + " bytes");
         byte[] gssToken = new byte[gssTokenSize];
         in.readFully(gssToken);
 
         int payloadWrappedSize = in.readInt();
+        System.err.println("Wrapped payload is " + payloadWrappedSize + " bytes");
         byte[] payloadWrapped = new byte[payloadWrappedSize];
         in.readFully(payloadWrapped);
 
         initSecContext(gssToken);
         byte[] payload = unwrap(payloadWrapped);
+        System.err.println("Payload is " + payload.length + " bytes");
 
         DataInputStream payloadIn = new DataInputStream(new ByteArrayInputStream(payload));
         int serverNonce = payloadIn.readInt();
