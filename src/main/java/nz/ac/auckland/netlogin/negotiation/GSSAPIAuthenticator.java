@@ -27,7 +27,7 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
 
     protected String getUserName() throws LoginException {
         try {
-            return context.getSrcName().toString().split("@", 2)[0];
+            return context.getSrcName().toString();
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
             throw new LoginException("GSSAPI: " + e.getMessage());

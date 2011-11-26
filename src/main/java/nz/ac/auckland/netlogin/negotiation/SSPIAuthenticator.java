@@ -57,7 +57,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     protected String getUserName() {
-        return Advapi32Util.getUserName();
+		return Secur32Util.getUserNameEx(Secur32.EXTENDED_NAME_FORMAT.NameServicePrincipal);
     }
 
     protected void initializeContext() throws LoginException {

@@ -35,7 +35,9 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
         outStream.write("gss:".getBytes());
         outStream.write(outToken);
 
-        String userName = getUserName();
+        String userPrincipal = getUserName();
+		String userName = userPrincipal.split("@", 2)[0];
+
         return new AuthenticationRequest(userName, outStream.toByteArray());
     }
 
