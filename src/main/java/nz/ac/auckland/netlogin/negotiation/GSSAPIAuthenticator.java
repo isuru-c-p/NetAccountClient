@@ -1,14 +1,8 @@
 package nz.ac.auckland.netlogin.negotiation;
 
-import nz.ac.auckland.cs.des.C_Block;
-import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 
 public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
 
@@ -53,6 +47,7 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
             context.requestMutualAuth(true); // mutual authentication
             context.requestConf(true); // confidentiality
             context.requestInteg(true); // integrity
+			context.requestReplayDet(true); // replay detection
             context.requestCredDeleg(false);
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());

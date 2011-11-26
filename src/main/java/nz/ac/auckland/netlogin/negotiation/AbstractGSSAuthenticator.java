@@ -52,7 +52,7 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
         byte[] payloadWrapped = new byte[payloadWrappedSize];
         in.readFully(payloadWrapped);
 
-        initSecContext(gssToken);
+        if (gssToken.length != 0) initSecContext(gssToken);
         byte[] payload = unwrap(payloadWrapped);
         System.err.println("Payload is " + payload.length + " bytes");
 
