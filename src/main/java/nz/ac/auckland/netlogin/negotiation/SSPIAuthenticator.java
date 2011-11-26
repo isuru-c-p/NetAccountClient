@@ -3,12 +3,7 @@ package nz.ac.auckland.netlogin.negotiation;
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.NativeLongByReference;
-import nz.ac.auckland.cs.des.C_Block;
 import javax.security.auth.login.LoginException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 
 /**
  * SSPI is a Microsoft protocol for authenticating between client and server.
@@ -117,7 +112,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
                 targetPrincipal,
                 new NativeLong(Sspi.ISC_REQ_CONNECTION), // | Sspi.ISC_REQ_CONFIDENTIALITY | Sspi.ISC_REQ_INTEGRITY | Sspi.ISC_REQ_REPLAY_DETECT),
                 new NativeLong(0),
-                new NativeLong(Sspi.SECURITY_NATIVE_DREP),
+                new NativeLong(0), //new NativeLong(Sspi.SECURITY_NATIVE_DREP), //SECURITY_NETWORK_DREP
                 pbServerToken,
                 new NativeLong(0),
                 phClientContext,
