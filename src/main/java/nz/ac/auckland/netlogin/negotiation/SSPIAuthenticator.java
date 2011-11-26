@@ -110,9 +110,9 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
                 phClientCredential,
                 phClientContext.isNull() ? null : phClientContext,
                 targetPrincipal,
-                new NativeLong(Sspi.ISC_REQ_CONNECTION), // | Sspi.ISC_REQ_CONFIDENTIALITY | Sspi.ISC_REQ_INTEGRITY | Sspi.ISC_REQ_REPLAY_DETECT),
+                new NativeLong(Sspi.ISC_REQ_CONNECTION | Sspi.ISC_REQ_CONFIDENTIALITY | Sspi.ISC_REQ_INTEGRITY | Sspi.ISC_REQ_REPLAY_DETECT),
                 new NativeLong(0),
-                new NativeLong(0), //new NativeLong(Sspi.SECURITY_NATIVE_DREP), //SECURITY_NETWORK_DREP
+                new NativeLong(Sspi.SECURITY_NATIVE_DREP), // vs SECURITY_NETWORK_DREP
                 pbServerToken,
                 new NativeLong(0),
                 phClientContext,
