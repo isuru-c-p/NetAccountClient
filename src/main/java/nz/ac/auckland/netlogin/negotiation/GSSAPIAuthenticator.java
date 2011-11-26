@@ -22,7 +22,7 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     public String getName() {
-        return "GSSAPI";
+        return "Kerberos Ticket";
     }
 
     protected String getUserName() throws LoginException {

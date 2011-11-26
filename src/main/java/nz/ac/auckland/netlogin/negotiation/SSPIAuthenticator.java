@@ -25,7 +25,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     public String getName() {
-        return "SSPI";
+        return "Windows Domain Account";
     }
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
