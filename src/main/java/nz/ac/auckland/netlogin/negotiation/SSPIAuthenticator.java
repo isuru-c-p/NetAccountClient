@@ -31,11 +31,11 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
 		final int SECBUFFER_STREAM = 10;
-		
+
 		Sspi.SecBufferDesc sspiBuffer = new Sspi.SecBufferDesc(SECBUFFER_STREAM, Sspi.MAX_TOKEN_SIZE);
 		Sspi.SecBufferDesc messageBuffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_DATA, wrapper);
-		
-		Sspi.SecBufferDesc combinedBuffer = new Sspi.SecBufferDesc();
+
+		Sspi.SecBufferDesc combinedBuffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_EMPTY, sspiBuffer.size() + messageBuffer.size());
 		combinedBuffer.cBuffers.setValue(2);
 		combinedBuffer.pBuffers = new Sspi.SecBuffer.ByReference[] {
 			sspiBuffer.pBuffers[0],
