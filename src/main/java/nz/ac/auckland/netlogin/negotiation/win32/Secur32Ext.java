@@ -4,12 +4,13 @@ import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.Sspi;
 import com.sun.jna.ptr.NativeLongByReference;
+import com.sun.jna.win32.StdCallLibrary;
 import com.sun.jna.win32.W32APIOptions;
 
 /**
  * Additional Secur32.dll functions not implemented in com.sun.jna.platform.win32.Secur32
  */
-public interface Secur32Ext {
+public interface Secur32Ext extends StdCallLibrary {
 
 	Secur32Ext INSTANCE = (Secur32Ext) Native.loadLibrary(
 			"Secur32", Secur32Ext.class, W32APIOptions.UNICODE_OPTIONS);
