@@ -3,6 +3,7 @@ package nz.ac.auckland.netlogin.negotiation;
 import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.NativeLongByReference;
+import nz.ac.auckland.netlogin.negotiation.win32.Secur32Ext;
 import javax.security.auth.login.LoginException;
 
 /**
@@ -30,6 +31,8 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
         throw new LoginException("SSPI unwrap not implemented");
+
+		Secur32Ext.INSTANCE.DecryptMessage(phClientContext)
 /*
         wrap_buf_desc.cBuffers = 2;
         wrap_buf_desc.pBuffers = wrap_bufs;

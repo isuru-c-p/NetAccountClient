@@ -64,8 +64,9 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
         byte[] sessionKey = new byte[sessionKeySize];
         payloadIn.readFully(sessionKey);
 
-        return new LoginComplete(serverNonce, new C_Block(sessionKey));
+		cleanup();
 
+        return new LoginComplete(serverNonce, new C_Block(sessionKey));
     }
 
     protected void cleanup() {
