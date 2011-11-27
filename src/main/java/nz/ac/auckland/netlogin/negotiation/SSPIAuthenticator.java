@@ -30,9 +30,11 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
-        throw new LoginException("SSPI unwrap not implemented");
+		Sspi.SecBufferDesc buffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_TOKEN, wrapper);
+		NativeLongByReference pfQOP = new NativeLongByReference();
+		Secur32Ext.INSTANCE.DecryptMessage(phClientContext, buffer, new NativeLong(0), pfQOP);
+		return buffer.getBytes();
 
-		Secur32Ext.INSTANCE.DecryptMessage(phClientContext)
 /*
         wrap_buf_desc.cBuffers = 2;
         wrap_buf_desc.pBuffers = wrap_bufs;

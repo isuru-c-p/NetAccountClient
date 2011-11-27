@@ -15,9 +15,9 @@ public interface Secur32Ext {
 			"Secur32", Secur32Ext.class, W32APIOptions.UNICODE_OPTIONS);
 
 	// SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext, ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo);
-	public int EncryptMessage(Sspi.CtxtHandle phContext, NativeLong fQOP, Sspi.SecBufferDesc pOutput, NativeLong messageSeqNo);
+	public int EncryptMessage(Sspi.CtxtHandle phContext, NativeLong fQOP, Sspi.SecBufferDesc pMessage, NativeLong messageSeqNo);
 
 	// SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext, PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP);
-	public int DecryptMessage(Sspi.CtxtHandle phContext, Sspi.SecBufferDesc pOutput, NativeLong messageSeqNo, NativeLongByReference fQOP);
+	public int DecryptMessage(Sspi.CtxtHandle phContext, Sspi.SecBufferDesc pMessage, NativeLong messageSeqNo, NativeLongByReference fQOP);
 
 }
