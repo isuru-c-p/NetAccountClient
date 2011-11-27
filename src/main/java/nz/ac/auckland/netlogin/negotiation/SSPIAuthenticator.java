@@ -31,10 +31,21 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
 		Sspi.SecBufferDesc buffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_DATA, wrapper);
+
+		// SECBUFFER_STREAM = 10
+		Sspi.SecBufferDesc sspiBuffer = new Sspi.SecBufferDesc(10, 1024);
+
+		Sspi.SecBufferDesc combinedBuffer = new Sspi.SecBufferDesc();
+		combinedBuffer.cBuffers.setValue(2);
+		combinedBuffer.pBuffers = new Sspi.SecBuffer.ByReference[] {
+			sspiBuffer.pBuffers[0],
+			buffer.pBuffers[0]
+		};
+
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
 		int responseCode = Secur32Ext.INSTANCE.DecryptMessage(
-				phClientContext, buffer, new NativeLong(0), pfQOP);
+				phClientContext, combinedBuffer, new NativeLong(0), pfQOP);
 
 		if (responseCode == W32Errors.SEC_E_OK) return buffer.getBytes();
 		throw handleError(responseCode);
@@ -96,7 +107,7 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
         // client ----------- security context
         phClientContext = new Sspi.CtxtHandle();
         pfClientContextAttr = new NativeLongByReference();
-        
+
     }
 
     protected byte[] initSecContext(byte[] gssToken) throws LoginException {
