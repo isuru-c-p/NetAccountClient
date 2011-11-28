@@ -32,16 +32,17 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     public byte[] unwrap(byte[] wrapper) throws LoginException {
 		final int SECBUFFER_STREAM = 10;
 
-		Sspi.SecBuffer.ByReference sspiBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, Sspi.MAX_TOKEN_SIZE);
-		Sspi.SecBuffer.ByReference messageBuffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_DATA, wrapper);
-		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(sspiBuffer, messageBuffer);
+		Sspi.SecBuffer.ByReference inBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
+		Sspi.SecBuffer.ByReference outBuffer = new Sspi.SecBuffer.ByReference();
+		outBuffer.BufferType = new NativeLong(Sspi.SECBUFFER_DATA);
+		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(inBuffer, outBuffer);
 
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
 		int responseCode = Secur32Ext.INSTANCE.DecryptMessage(
 				phClientContext, buffers, new NativeLong(0), pfQOP);
 
-		if (responseCode == W32Errors.SEC_E_OK) return messageBuffer.getBytes();
+		if (responseCode == W32Errors.SEC_E_OK) return outBuffer.getBytes();
 		throw handleError(responseCode);
     }
 
