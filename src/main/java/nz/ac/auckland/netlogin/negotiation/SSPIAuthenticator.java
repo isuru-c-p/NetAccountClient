@@ -31,18 +31,37 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
 		final int SECBUFFER_STREAM = 10;
+		final int SECBUFFER_READONLY = 0x80000000;
 
-		Sspi.SecBuffer.ByReference inBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
-		Sspi.SecBuffer.ByReference outBuffer = new Sspi.SecBuffer.ByReference();
-		outBuffer.BufferType = new NativeLong(Sspi.SECBUFFER_DATA);
-		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(inBuffer, outBuffer);
+		// this works, but writes starting from the end of the buffer
+		// - not helpful unless you know the message size!
+//		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
+//		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer);
+
+		Sspi.SecBuffer.ByReference inBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_READONLY | SECBUFFER_STREAM, wrapper);
+		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference();
+		buffer.BufferType = new NativeLong(Sspi.SECBUFFER_DATA);
+		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(inBuffer, buffer);
+
+		// http://msdn.microsoft.com/en-us/library/windows/desktop/aa380536(v=vs.85).aspx
+		// trailer size (dword), trailer, data
+
+//		int inTokenSize = ...
+//		byte[] inToken = new byte[inTokenSize];
+//		byte[] inData = new byte[wrapper.length - inTokenSize - 4];
+//		System.arraycopy(wrapper, 4, inToken, 0, inTokenSize);
+//		System.arraycopy(wrapper, 4 + inTokenSize, inData, 0, inData.length);
+//
+//		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_DATA, inData);
+//		Sspi.SecBuffer.ByReference tokenBuffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_TOKEN, inToken);
+//		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer, tokenBuffer);
 
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
 		int responseCode = Secur32Ext.INSTANCE.DecryptMessage(
 				phClientContext, buffers, new NativeLong(0), pfQOP);
 
-		if (responseCode == W32Errors.SEC_E_OK) return outBuffer.getBytes();
+		if (responseCode == W32Errors.SEC_E_OK) return buffer.getBytes();
 		throw handleError(responseCode);
     }
 
