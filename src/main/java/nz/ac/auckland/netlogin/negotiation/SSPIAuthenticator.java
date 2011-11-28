@@ -35,13 +35,8 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
 		// this works, but writes starting from the end of the buffer
 		// - not helpful unless you know the message size!
-//		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
-//		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer);
-
-		Sspi.SecBuffer.ByReference inBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_READONLY | SECBUFFER_STREAM, wrapper);
-		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference();
-		buffer.BufferType = new NativeLong(Sspi.SECBUFFER_DATA);
-		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(inBuffer, buffer);
+		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
+		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer);
 
 		// http://msdn.microsoft.com/en-us/library/windows/desktop/aa380536(v=vs.85).aspx
 		// trailer size (dword), trailer, data
