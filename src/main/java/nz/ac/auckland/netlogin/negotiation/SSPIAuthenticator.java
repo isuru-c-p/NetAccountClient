@@ -1,7 +1,6 @@
 package nz.ac.auckland.netlogin.negotiation;
 
 import com.sun.jna.NativeLong;
-import com.sun.jna.Structure;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.NativeLongByReference;
 import nz.ac.auckland.netlogin.negotiation.win32.Secur32Ext;
@@ -35,24 +34,16 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
 		Sspi.SecBuffer.ByReference sspiBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, Sspi.MAX_TOKEN_SIZE);
 		Sspi.SecBuffer.ByReference messageBuffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_DATA, wrapper);
-
-		SecBufferDescRef combinedBuffer = new SecBufferDescRef();
-		combinedBuffer.cBuffers.setValue(2);
-		combinedBuffer.pBuffers = new Sspi.SecBuffer.ByReference[] { sspiBuffer, messageBuffer };
+		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(sspiBuffer, messageBuffer);
 
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
 		int responseCode = Secur32Ext.INSTANCE.DecryptMessage(
-				phClientContext, combinedBuffer, new NativeLong(0), pfQOP);
+				phClientContext, buffers, new NativeLong(0), pfQOP);
 
 		if (responseCode == W32Errors.SEC_E_OK) return messageBuffer.getBytes();
 		throw handleError(responseCode);
     }
-
-	public static class SecBufferDescRef extends Sspi.SecBufferDesc implements Structure.ByReference {
-		public SecBufferDescRef() {
-		}
-	}
 
     protected String getUserName() {
 		return Secur32Util.getUserNameEx(Secur32.EXTENDED_NAME_FORMAT.NameServicePrincipal);
