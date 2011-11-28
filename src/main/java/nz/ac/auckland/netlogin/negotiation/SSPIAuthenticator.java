@@ -32,15 +32,12 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     public byte[] unwrap(byte[] wrapper) throws LoginException {
 		final int SECBUFFER_STREAM = 10;
 
-		Sspi.SecBufferDesc sspiBuffer = new Sspi.SecBufferDesc(SECBUFFER_STREAM, Sspi.MAX_TOKEN_SIZE);
-		Sspi.SecBufferDesc messageBuffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_DATA, wrapper);
+		Sspi.SecBuffer.ByReference sspiBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, Sspi.MAX_TOKEN_SIZE);
+		Sspi.SecBuffer.ByReference messageBuffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_DATA, wrapper);
 
-		Sspi.SecBufferDesc combinedBuffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_EMPTY, sspiBuffer.size() + messageBuffer.size());
+		Sspi.SecBufferDesc combinedBuffer = new Sspi.SecBufferDesc(Sspi.SECBUFFER_EMPTY, 0);
 		combinedBuffer.cBuffers.setValue(2);
-		combinedBuffer.pBuffers = new Sspi.SecBuffer.ByReference[] {
-			sspiBuffer.pBuffers[0],
-			messageBuffer.pBuffers[0]
-		};
+		combinedBuffer.pBuffers = new Sspi.SecBuffer.ByReference[] { sspiBuffer, messageBuffer };
 
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
@@ -49,31 +46,6 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
 
 		if (responseCode == W32Errors.SEC_E_OK) return messageBuffer.getBytes();
 		throw handleError(responseCode);
-
-/*
-        wrap_buf_desc.cBuffers = 2;
-        wrap_buf_desc.pBuffers = wrap_bufs;
-        wrap_buf_desc.ulVersion = SECBUFFER_VERSION;
-
-// This buffer is for SSPI.
-        wrap_bufs[0].BufferType = SECBUFFER_STREAM;
-        wrap_bufs[0].pvBuffer = xmit_buf.pvBuffer;
-        wrap_bufs[0].cbBuffer = xmit_buf.cbBuffer;
-
-// This buffer holds the application data.
-        wrap_bufs[1].BufferType = SECBUFFER_DATA;
-        wrap_bufs[1].cbBuffer = 0;
-        wrap_bufs[1].pvBuffer = NULL;
-        maj_stat = DecryptMessage(
-        &context,
-        &wrap_buf_desc,
-        0, // no sequence number
-        &qop
-        );
-
-// This is where the data is.
-        msg_buf = wrap_bufs[1];
-*/
     }
 
     protected String getUserName() {
