@@ -1,5 +1,6 @@
 package nz.ac.auckland.netlogin.negotiation;
 
+import nz.ac.auckland.netlogin.util.MessagePrefixUtil;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
@@ -68,7 +69,8 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
     protected byte[] unwrap(byte[] wrapper) throws LoginException {
         try {
             MessageProp messageProp = new MessageProp(0, true);
-            return context.unwrap(wrapper, 0, wrapper.length, messageProp);
+            byte[] fullMessage = context.unwrap(wrapper, 0, wrapper.length, messageProp);
+            return MessagePrefixUtil.removeMessagePrefix(MAGIC_PAYLOAD, fullMessage);
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
             throw new LoginException("GSSAPI: " + e.getMessage());

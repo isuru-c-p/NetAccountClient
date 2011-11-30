@@ -4,6 +4,7 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.platform.win32.*;
 import com.sun.jna.ptr.NativeLongByReference;
 import nz.ac.auckland.netlogin.negotiation.win32.Secur32Ext;
+import nz.ac.auckland.netlogin.util.MessagePrefixUtil;
 import javax.security.auth.login.LoginException;
 
 /**
@@ -30,38 +31,38 @@ public class SSPIAuthenticator extends AbstractGSSAuthenticator {
     }
 
     public byte[] unwrap(byte[] wrapper) throws LoginException {
-		final int SECBUFFER_STREAM = 10;
-		final int SECBUFFER_READONLY = 0x80000000;
-
 		// this works, but writes starting from the end of the buffer
 		// - not helpful unless you know the message size!
-//		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
-//		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer);
+		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(Secur32Ext.SECBUFFER_STREAM, wrapper);
+		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer);
 
-		// http://msdn.microsoft.com/en-us/library/windows/desktop/aa380536(v=vs.85).aspx
-		// trailer size (dword), trailer, data
-
-		int inTokenSize = 8;
-		byte[] inToken = new byte[inTokenSize];
-		byte[] inData = new byte[wrapper.length - inTokenSize - 4];
-		System.arraycopy(wrapper, 4, inToken, 0, inTokenSize);
-		System.arraycopy(wrapper, 4 + inTokenSize, inData, 0, inData.length);
-
-		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_DATA, inData);
-		Sspi.SecBuffer.ByReference tokenBuffer = new Sspi.SecBuffer.ByReference(Sspi.SECBUFFER_TOKEN, inToken);
-		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(buffer, tokenBuffer);
+		// Some other APIs use this approach, but it always seems to write to the stream buffer rather than the data buffer
+//		Sspi.SecBuffer.ByReference inBuffer = new Sspi.SecBuffer.ByReference(SECBUFFER_STREAM, wrapper);
+//		Sspi.SecBuffer.ByReference buffer = new Sspi.SecBuffer.ByReference();
+//		buffer.BufferType = new NativeLong(Sspi.SECBUFFER_DATA);
+//		Secur32Ext.SecBufferDesc2 buffers = new Secur32Ext.SecBufferDesc2(inBuffer, buffer);
 
 		NativeLongByReference pfQOP = new NativeLongByReference();
 
 		int responseCode = Secur32Ext.INSTANCE.DecryptMessage(
 				phClientContext, buffers, new NativeLong(0), pfQOP);
 
-		if (responseCode == W32Errors.SEC_E_OK) return buffer.getBytes();
-		throw handleError(responseCode);
+		if (responseCode != W32Errors.SEC_E_OK) {
+            throw handleError(responseCode);
+        }
+
+        // remove both the message prefix, and the last byte used as a terminator
+        byte[] fullMessage = buffer.getBytes();
+        Integer offset = MessagePrefixUtil.findStartOfMessage(MAGIC_PAYLOAD, fullMessage);
+        if (offset == 0) throw new RuntimeException("Message is malformed");
+        byte[] message = new byte[fullMessage.length - offset - 1];
+        System.arraycopy(fullMessage, offset, message, 0, message.length);
+
+        return message;
     }
 
     protected String getUserName() {
-		return Secur32Util.getUserNameEx(Secur32.EXTENDED_NAME_FORMAT.NameServicePrincipal);
+		return Secur32Util.getUserNameEx(Secur32.EXTENDED_NAME_FORMAT.NameUserPrincipal);
     }
 
     protected void initializeContext() throws LoginException {

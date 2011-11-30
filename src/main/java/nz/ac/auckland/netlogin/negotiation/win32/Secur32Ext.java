@@ -16,6 +16,8 @@ public interface Secur32Ext extends StdCallLibrary {
 	Secur32Ext INSTANCE = (Secur32Ext) Native.loadLibrary(
 			"Secur32", Secur32Ext.class, W32APIOptions.UNICODE_OPTIONS);
 
+    public static final int SECBUFFER_STREAM = 10;
+
 	// SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext, ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo);
 	public int EncryptMessage(Sspi.CtxtHandle phContext, NativeLong fQOP, SecBufferDesc2 pMessage, NativeLong messageSeqNo);
 
