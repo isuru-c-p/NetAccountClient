@@ -7,13 +7,14 @@ import javax.swing.*;
 import javax.swing.event.CaretListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.EventHandler;
 import java.lang.reflect.InvocationTargetException;
 
 public class LoginDialog implements CredentialsCallback {
 
-	private boolean valid = false;
 	private JDialog dialog;
 	private JTextField userText;
 	private JTextField passwordText;
@@ -22,6 +23,7 @@ public class LoginDialog implements CredentialsCallback {
 	private JCheckBox rememberMeCheckbox;
 	private JLabel userLabel;
 	private JLabel passwordLabel;
+    private String password = null;
 
 	public LoginDialog() {
 		createComponents();
@@ -63,9 +65,13 @@ public class LoginDialog implements CredentialsCallback {
 
 	protected void registerEvents() {
 		// clear the retrievePassword dialog when the window closes
-		dialog.addWindowListener(EventHandler.create(WindowListener.class, this, "clearPassword"));
+		dialog.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent windowEvent) {
+                LoginDialog.this.clearPassword();
+            }
+        });
 
-		// enable the login button if the username and retrievePassword are supplied
+		// enable the login button if the username and password are supplied
 		CaretListener detailsValidator = EventHandler.create(CaretListener.class, this, "validateDetails");
 		userText.addCaretListener(detailsValidator);
 		passwordText.addCaretListener(detailsValidator);
@@ -76,7 +82,7 @@ public class LoginDialog implements CredentialsCallback {
 		passwordText.addActionListener(loginAction);
 
 		// close the dialog
-		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "cancel"));
+		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
 	}
 
 	protected void createComponents() {
@@ -102,12 +108,12 @@ public class LoginDialog implements CredentialsCallback {
 	}
 
 	public void open() {
-		valid = false;
-		clearPassword();
+        this.password = null;
 		dialog.setVisible(true);
 	}
 
 	public void close() {
+        clearPassword();
 		dialog.setVisible(false);
 	}
 
@@ -124,12 +130,7 @@ public class LoginDialog implements CredentialsCallback {
 	}
 
 	public void login() {
-		valid = true;
-		close();
-	}
-
-	public void cancel() {
-		clearPassword();
+		this.password = passwordText.getText();
 		close();
 	}
 
@@ -155,7 +156,7 @@ public class LoginDialog implements CredentialsCallback {
 			return false;
 		}
 
-		if (!valid) throw new LoginCancelled();
+		if (password == null) throw new LoginCancelled();
 		return true;
 	}
 
@@ -164,8 +165,8 @@ public class LoginDialog implements CredentialsCallback {
 	}
 
 	public String retrievePassword() {
-		String password = passwordText.getText();
-		clearPassword();
+		String password = this.password;
+        this.password = null;
 		return password;
 	}
 
