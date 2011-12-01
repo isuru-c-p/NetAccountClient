@@ -17,8 +17,7 @@ import java.lang.reflect.Method;
 
 public class NetLoginGUI extends JPanel implements PingListener {
 
-	private Window window;
-    private JFrame iconifiableWindow;
+	private JFrame window;
 
 	private JLabel userLabel;
 	private JLabel planLabel;
@@ -83,27 +82,17 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public void createWindow() {
-		if (isSystemTraySupported()) {
-			JDialog dialog = new JDialog((Frame)null, "NetLogin");
-			dialog.setContentPane(mainPanel);
-            dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-            dialog.setResizable(false);
-			dialog.setJMenuBar(createMenuBar());
-			window = dialog;
-		} else {
-			JFrame frame = new JFrame("NetLogin");
-			frame.setContentPane(mainPanel);
-            frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-            frame.setResizable(false);
-			frame.setJMenuBar(createMenuBar());
-			window = iconifiableWindow = frame;
-		}
+        window = new JFrame("NetLogin");
+        window.setContentPane(mainPanel);
+        window.setResizable(false);
+        window.setJMenuBar(createMenuBar());
 
+        window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		window.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-					minimizeWindow();
-			}
-		});
+            public void windowClosing(WindowEvent e) {
+                minimizeWindow();
+            }
+        });
 
 		window.setBounds(12, 12, 270, 160);
 		window.setLocationRelativeTo(null);
@@ -123,7 +112,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 	
 	public void openWindow() {
-		if (!isSystemTraySupported()) iconifiableWindow.setExtendedState(Frame.NORMAL);
+		window.setExtendedState(Frame.NORMAL);
 		window.setVisible(true);
 		window.toFront();
 	}
@@ -132,7 +121,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		if (isSystemTraySupported()) {
 			window.setVisible(false);
 		} else {
-			iconifiableWindow.setExtendedState(Frame.ICONIFIED);
+			window.setExtendedState(Frame.ICONIFIED);
 		}
 	}
 
@@ -192,12 +181,20 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		connectedPanel.add(usageLabel);
 		SpringUtilities.makeCompactGrid(connectedPanel, 3, 2, 5, 5, 5, 5);
 
-		JComponent disconnectedPanel = createMessagePanel("Not Connected", valueFont, valueColor, null);
-		JComponent connectingPanel = createMessagePanel("Connecting...", valueFont, valueColor, Icons.getInstance().getSpinner());
-		
+		JPanel disconnectedPanel = createMessagePanel("Not Connected", valueFont, valueColor, null);
+
+		JLabel connectingLabel = new JLabel("Connecting...");
+		connectingLabel.setFont(valueFont);
+		connectingLabel.setForeground(valueColor);
+
+        JProgressBar connectingProgress = new JProgressBar();
+        connectingProgress.setIndeterminate(true);
+
+		JComponent connectingPanel = alignVertically(createFlow(connectingLabel), createFlow(connectingProgress));
+
 		bodyPanel = new JPanel(new CardLayout());
-		bodyPanel.add("disconnected", disconnectedPanel);
-		bodyPanel.add("connecting", connectingPanel);
+		bodyPanel.add("disconnected", alignVertically(disconnectedPanel));
+		bodyPanel.add("connecting", alignVertically(connectingPanel));
 		bodyPanel.add("connected", alignHorizontally(connectedPanel));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 7));
@@ -210,28 +207,38 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		mainPanel.add(buttonPanel);
 	}
 
-	private JComponent createMessagePanel(String text, Font font, Color color, Image image) {
+    private JPanel createFlow(JComponent component) {
+        JPanel flowPanel = new JPanel(new FlowLayout());
+        flowPanel.add(component);
+        return flowPanel;
+    }
+
+	private JPanel createMessagePanel(String text, Font font, Color color, Image image) {
 		JLabel messageLabel = new JLabel(text);
 		messageLabel.setFont(font);
 		messageLabel.setForeground(color);
 		if (image != null) messageLabel.setIcon(new ImageIcon(image));
 		JPanel messagePanel = new JPanel(new FlowLayout());
 		messagePanel.add(messageLabel);
-		return alignVertically(messagePanel);
+		return messagePanel;
 	}
 
-	private JComponent alignHorizontally(JComponent component) {
+	private JComponent alignHorizontally(JComponent... components) {
 		Box connectingPanel = Box.createHorizontalBox();
 		connectingPanel.add(Box.createHorizontalGlue());
-		connectingPanel.add(component);
+        for(JComponent component : components) {
+            connectingPanel.add(component);
+        }
 		connectingPanel.add(Box.createHorizontalGlue());
 		return connectingPanel;
 	}
 
-	private JComponent alignVertically(JComponent component) {
+	private JComponent alignVertically(JComponent... components) {
 		Box connectingPanel = Box.createVerticalBox();
 		connectingPanel.add(Box.createVerticalGlue());
-		connectingPanel.add(component);
+        for(JComponent component : components) {
+            connectingPanel.add(component);
+        }
 		connectingPanel.add(Box.createVerticalGlue());
 		return connectingPanel;
 	}
