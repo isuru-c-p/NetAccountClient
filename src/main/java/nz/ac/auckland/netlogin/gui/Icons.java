@@ -14,7 +14,6 @@ public class Icons {
     private Image iconConnected;
     private Image iconConnecting;
     private Image iconDisconnected;
-	private Image spinner;
 
 	public static Icons getInstance() {
 		if (instance == null) instance = new Icons();
@@ -30,7 +29,6 @@ public class Icons {
         iconConnected = loadImage("StatusIconConnected.png");
         iconConnecting = loadImage("StatusIconConnecting.png");
         iconDisconnected = loadImage("StatusIconDisconnected.png");
-		spinner = loadImage("Spinner.gif");
 
 		windowIcons = new ArrayList<Image>();
 		for(int iconSize : windowIconSizes) {
@@ -65,7 +63,4 @@ public class Icons {
 		return windowIcons;
 	}
 
-	public Image getSpinner() {
-		return spinner;
-	}
 }
