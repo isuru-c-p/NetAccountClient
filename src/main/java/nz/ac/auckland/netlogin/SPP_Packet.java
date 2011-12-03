@@ -17,14 +17,16 @@ public class SPP_Packet {
 	static final int REMOTE_RSLT_ACCESS_RESTRICTION_BAN	=	-103; //sent in the version field as a response
 	static final int REMOTE_RSLT_PROTOCOL_FAILURE		=	-104; //sent in the version field as a response
 
+	private int connectTimeout = 3000;
 	Socket passwdSocket = null;
 	DataOutputStream os = null;
 	DataInputStream is = null;
-	int Last_Read_length = 0;
+	int lastReadLength = 0;
 
 	// create the socket and connect to the host.
     public SPP_Packet(String host, int port) throws IOException {
-		passwdSocket = new Socket(host, port);
+		passwdSocket = new Socket();
+		passwdSocket.connect(new InetSocketAddress(host, port), connectTimeout);
 		os = new DataOutputStream(new BufferedOutputStream(passwdSocket.getOutputStream()));
 		is = new DataInputStream(new BufferedInputStream(passwdSocket.getInputStream()));
     }
@@ -52,12 +54,12 @@ public class SPP_Packet {
 		int Rversion;
 		int Result = RSLT_OK;
     
-		Last_Read_length = is.readInt() - 8;	//Read the data length field + the 8 bytes for the packettype and version
-		if(Last_Read_length < 0)
-			throw new IOException("ReadPacket 1: data length " +  Last_Read_length + " < 0");
+		lastReadLength = is.readInt() - 8;	//Read the data length field + the 8 bytes for the packettype and version
+		if(lastReadLength < 0)
+			throw new IOException("ReadPacket 1: data length " + lastReadLength + " < 0");
 
-		if(Last_Read_length > buffer.length)
-			throw new IOException("ReadPacket 2: data length " + Last_Read_length + " > buffer length");
+		if(lastReadLength > buffer.length)
+			throw new IOException("ReadPacket 2: data length " + lastReadLength + " > buffer length");
 			
 		RPacketType = is.readInt();		//Read the Pack type Field
 		if(RPacketType != PacketType) {
@@ -70,9 +72,9 @@ public class SPP_Packet {
 			Result = Rversion;
 		}
 			
-		while(i < Last_Read_length && got != -1) { //we loop here until we get all the data
+		while(i < lastReadLength && got != -1) { //we loop here until we get all the data
 			try {
-    			got = is.read(buffer, i, Last_Read_length-i);
+    			got = is.read(buffer, i, lastReadLength -i);
     		} catch(IOException e) {
     			throw new IOException("ReadPacket 5: " + e.getMessage());
     		}

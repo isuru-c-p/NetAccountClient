@@ -200,7 +200,7 @@ public class NetLoginConnection {
 			case SPP_Packet.REMOTE_RSLT_BAD_VERSION:
 				error_msg = "Client Version incorrect";
 				unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream(
-							InBuffer, 0, netGuardianStream.Last_Read_length ) );
+							InBuffer, 0, netGuardianStream.lastReadLength) );
 				try {
 					clientRelVersion = unencrypted_data_input_Stream.readInt();
 					if ( clientRelVersion > 0 ) {
@@ -230,14 +230,14 @@ public class NetLoginConnection {
 
 		PacketHeader = null;
 
-		if( netGuardianStream.Last_Read_length < /*C_Block.size() + 4 * 4*/ 20 )
+		if( netGuardianStream.lastReadLength < /*C_Block.size() + 4 * 4*/ 20 )
 			throw new IOException("readPacket1: AUTH_REQ_RESPONSE_PACKET too short, " +
-					netGuardianStream.Last_Read_length + " bytes " + (C_Block.size() * 4) );
+					netGuardianStream.lastReadLength + " bytes " + (C_Block.size() * 4) );
 
 		unencrypted_data_input_Stream = new DataInputStream( new ByteArrayInputStream( InBuffer, 0, 4 ) );
 		clientRelVersion = unencrypted_data_input_Stream.readInt();
 
-		byte[] payload = new byte[netGuardianStream.Last_Read_length - 4];
+		byte[] payload = new byte[netGuardianStream.lastReadLength - 4];
 		System.arraycopy(InBuffer, 4, payload, 0, payload.length);
 
 		Authenticator.LoginComplete session = authenticator.validateResponse(payload);
@@ -281,7 +281,7 @@ public class NetLoginConnection {
 				throw new IOException( "Protocol Error " + PacketHeader.Result );
 		}
 
-		if ( netGuardianStream.Last_Read_length < ( 10 * 4 ) )
+		if ( netGuardianStream.lastReadLength < ( 10 * 4 ) )
 			throw new IOException( "readPacket2: AUTH_CONFIRM_RESPONSE_PACKET too short" );
 		//too short for serverNonce, ack and string
 
@@ -295,7 +295,7 @@ public class NetLoginConnection {
 		lastModDate = unencrypted_data_input_Stream.readInt();
 
 
-		des_in = new desDataInputStream( InBuffer , 28, netGuardianStream.Last_Read_length, schedule );
+		des_in = new desDataInputStream( InBuffer , 28, netGuardianStream.lastReadLength, schedule );
 
 		random_returned = des_in.readInt();
 		if ( clientNonce + 2 != random_returned ) {	// Other end doesn't agree on the current passwd
