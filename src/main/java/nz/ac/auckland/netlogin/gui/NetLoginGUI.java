@@ -22,6 +22,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private JLabel userLabel;
 	private JLabel planLabel;
 	private JLabel usageLabel;
+	private JLabel connectionErrorMessage;
 
 	private NetLoginPreferences preferences;
 
@@ -133,30 +134,9 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		JLabel upiTitle = new JLabel("NetID/UPI:", JLabel.RIGHT);
 		JLabel planTitle = new JLabel("Internet Plan:", JLabel.RIGHT);
 		JLabel usageTitle = new JLabel("Used this month:", JLabel.RIGHT);
-		userLabel = new JLabel("Not Connected");
-		planLabel = new JLabel();
-		usageLabel = new JLabel();
-
-		Font labelFont = upiTitle.getFont();
-		Font valueFont = upiTitle.getFont().deriveFont(Font.BOLD);
-		Color labelColor = Color.BLACK;
-		Color valueColor = Color.BLACK; //new Color(51, 102, 255);
-
-		userLabel.setFont(valueFont);
-		planLabel.setFont(valueFont);
-		usageLabel.setFont(valueFont);
-
-		userLabel.setForeground(valueColor);
-		planLabel.setForeground(valueColor);
-		usageLabel.setForeground(valueColor);
-
-		upiTitle.setFont(labelFont);
-		planTitle.setFont(labelFont);
-		usageTitle.setFont(labelFont);
-
-		upiTitle.setForeground(labelColor);
-		planTitle.setForeground(labelColor);
-		usageTitle.setForeground(labelColor);
+		userLabel = createStrongLabel("");
+		planLabel = createStrongLabel("");
+		usageLabel = createStrongLabel("");
 
 		connectButton = new JButton("Connect");
 		connectButton.setToolTipText("Login to NetAccount");
@@ -181,16 +161,18 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		connectedPanel.add(usageLabel);
 		SpringUtilities.makeCompactGrid(connectedPanel, 3, 2, 5, 5, 5, 5);
 
-		JPanel disconnectedPanel = createMessagePanel("Not Connected", valueFont, valueColor, null);
+        connectionErrorMessage = new JLabel();
 
-		JLabel connectingLabel = new JLabel("Connecting...");
-		connectingLabel.setFont(valueFont);
-		connectingLabel.setForeground(valueColor);
+		JComponent disconnectedPanel = alignVertically(
+				createFlow(createStrongLabel("Not Connected")),
+				createFlow(connectionErrorMessage));
 
         JProgressBar connectingProgress = new JProgressBar();
         connectingProgress.setIndeterminate(true);
 
-		JComponent connectingPanel = alignVertically(createFlow(connectingLabel), createFlow(connectingProgress));
+		JComponent connectingPanel = alignVertically(
+				createFlow(createStrongLabel("Connecting...")),
+				createFlow(connectingProgress));
 
 		bodyPanel = new JPanel(new CardLayout());
 		bodyPanel.add("disconnected", alignVertically(disconnectedPanel));
@@ -207,7 +189,13 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		mainPanel.add(buttonPanel);
 	}
 
-    private JPanel createFlow(JComponent component) {
+	private JLabel createStrongLabel(String labelText) {
+		JLabel label = new JLabel(labelText);
+		label.setFont(label.getFont().deriveFont(Font.BOLD));
+		return label;
+	}
+
+	private JPanel createFlow(JComponent component) {
         JPanel flowPanel = new JPanel(new FlowLayout());
         flowPanel.add(component);
         return flowPanel;
@@ -251,6 +239,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(false);
+				connectionErrorMessage.setText("");
 				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "connecting");
 			}
 		});
@@ -261,7 +250,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 			public void run() {
 				connectButton.setEnabled(true);
 				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "disconnected");
-				if (message != null) JOptionPane.showMessageDialog(NetLoginGUI.this, "NetLogin - " + message);
+				if (message != null) connectionErrorMessage.setText(message);
 			}
 		});
 	}
