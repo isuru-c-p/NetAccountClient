@@ -43,26 +43,6 @@
 		</dependency>
 	</dependencies>
 
-	<repositories>
-		<!-- UoA repository -->
-		<repository>
-			<id>uoa</id>
-			<name>The University of Auckland repository</name>
-			<url>http://waterfall.auckland.ac.nz/repository/uoa</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>uoa-external</id>
-			<name>The University of Auckland repository of external artifacts</name>
-			<url>http://waterfall.auckland.ac.nz/repository/external</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
 	<build>
 		<extensions>
 			<extension>
@@ -128,6 +108,63 @@
                 </configuration>
             </plugin>
             -->
+			<plugin>
+				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
+				<artifactId>launch4j-plugin</artifactId>
+				<version>1.5.0.0</version>
+				<executions>
+					<execution>
+						<id>launch4j</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<headerType>console</headerType>
+					<outfile>target/NetLogin.exe</outfile>
+					<jar>target/netlogin-${project.version}-jar-with-dependencies.jar</jar>
+					<errTitle>NetLogin</errTitle>
+					<customProcName>NetLogin</customProcName>
+					<!--<icon></icon>-->
+					<jre>
+						<minVersion>1.5.0</minVersion>
+					</jre>
+					<initialHeapSize>10</initialHeapSize>
+					<maxHeapSize>10</maxHeapSize>
+					<!--<versionInfo>-->
+						<!--<fileVersion>1.2.3.4</fileVersion>-->
+						<!--<txtFileVersion>txt file version</txtFileVersion>-->
+						<!--<fileDescription>a description</fileDescription>-->
+						<!--<copyright>my copyright</copyright>-->
+						<!--<productVersion>4.3.2.1</productVersion>-->
+						<!--<txtProductVersion>txt product version</txtProductVersion>-->
+						<!--<productName>product name</productName>-->
+						<!--<internalName>internal name</internalName>-->
+						<!--<originalFilename>original.exe</originalFilename>-->
+					<!--</versionInfo>-->
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.mindtree.techworks.insight.releng</groupId>
+				<artifactId>maven-jsmooth-plugin</artifactId>
+				<version>0.2.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jsmoothcompile</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<jsmoothFile>src/main/assembly/netlogin.jsmooth</jsmoothFile>
+					<setJarName>false</setJarName>
+					<includeDependencies>false</includeDependencies>
+					<iconLocation>src/main/resources/AppIcon 256.png</iconLocation>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -142,5 +179,36 @@
 			<uniqueVersion>true</uniqueVersion>
 		</snapshotRepository>
 	</distributionManagement>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mindtreeinsight</id>
+			<url>http://mindtreeinsight.svn.sourceforge.net/svnroot/mindtreeinsight/maven-repo/trunk/release</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<repositories>
+		<!-- UoA repository -->
+		<repository>
+			<id>uoa</id>
+			<name>The University of Auckland repository</name>
+			<url>http://waterfall.auckland.ac.nz/repository/uoa</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>uoa-external</id>
+			<name>The University of Auckland repository of external artifacts</name>
+			<url>http://waterfall.auckland.ac.nz/repository/external</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>mindtreeinsight</id>
+			<url>http://mindtreeinsight.svn.sourceforge.net/svnroot/mindtreeinsight/maven-repo/trunk/release</url>
+		</repository>
+	</repositories>
 
 </project>
