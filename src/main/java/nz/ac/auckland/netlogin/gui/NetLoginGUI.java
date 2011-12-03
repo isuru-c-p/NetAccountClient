@@ -393,12 +393,6 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		String label = "Disconnected";
 		if (connected) label = "Connected";
 		trayIcon.setToolTip(label);
-
-        if (connected) {
-            trayIcon.setImage(Icons.getInstance().getConnectedIcon());
-        } else {
-            trayIcon.setImage(Icons.getInstance().getDisconnectedIcon());
-        }
 	}
 
 	private void initTrayIcon() {
@@ -420,8 +414,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		popup.addSeparator();
 		popup.add(openItem);
 		popup.add(exitItem);
-		
-		trayIcon = new TrayIcon(Icons.getInstance().getDefaultIcon(), "NetLogin", popup);
+
+		Dimension trayIconSize = SystemTray.getSystemTray().getTrayIconSize();
+		Image trayIconImage = Icons.getInstance().getClosestIcon(trayIconSize);
+		trayIcon = new TrayIcon(trayIconImage, "NetLogin", popup);
 		trayIcon.setImageAutoSize(false);
 		trayIcon.setToolTip("NetLogin");
 
