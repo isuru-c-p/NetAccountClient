@@ -14,9 +14,7 @@
 		<profile>
 			<id>mac</id>
 			<activation>
-				<os>
-					<name>mac os x</name>
-				</os>
+				<os><name>mac os x</name></os>
 			</activation>
 			<properties>
 				<swt.groupId>org.eclipse.swt</swt.groupId>
@@ -26,9 +24,7 @@
 		<profile>
 			<id>windows</id>
 			<activation>
-				<os>
-					<family>windows</family>
-				</os>
+				<os><family>windows</family></os>
 			</activation>
 			<properties>
 				<swt.groupId>org.eclipse.swt</swt.groupId>
@@ -98,110 +94,6 @@
 					<target>1.5</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>nz.ac.auckland.netlogin.NetLogin</mainClass>
-                            <packageName>nz.ac.auckland.netlogin</packageName>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-						</manifest>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-            <!--
-            Installation packages can be created with izpack
-            <plugin>
-                <groupId>org.codehaus.izpack</groupId>
-                <artifactId>izpack-maven-plugin</artifactId>
-                <version>5.0.0-beta9</version>
-            </plugin>
-            -->
-            <!--
-            Application bundle for OSX
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>osxappbundle-maven-plugin</artifactId>
-                <version>1.0-alpha-2</version>
-                <configuration>
-                    <bundleName>NetLogin</bundleName>
-                    <mainClass>nz.ac.auckland.netlogin.NetLogin</mainClass>
-                    <jvmVersion>1.5+</jvmVersion>
-                    <internetEnable>true</internetEnable>
-                </configuration>
-            </plugin>
-            -->
-			<plugin>
-				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
-				<artifactId>launch4j-plugin</artifactId>
-				<version>1.5.0.0</version>
-				<executions>
-					<execution>
-						<id>launch4j</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>launch4j</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<headerType>console</headerType>
-					<outfile>target/NetLogin.exe</outfile>
-					<jar>target/netlogin-${project.version}-jar-with-dependencies.jar</jar>
-					<errTitle>NetLogin</errTitle>
-					<customProcName>NetLogin</customProcName>
-					<!--<icon></icon>-->
-					<jre>
-						<minVersion>1.5.0</minVersion>
-					</jre>
-					<initialHeapSize>10</initialHeapSize>
-					<maxHeapSize>10</maxHeapSize>
-					<!--<versionInfo>-->
-						<!--<fileVersion>1.2.3.4</fileVersion>-->
-						<!--<txtFileVersion>txt file version</txtFileVersion>-->
-						<!--<fileDescription>a description</fileDescription>-->
-						<!--<copyright>my copyright</copyright>-->
-						<!--<productVersion>4.3.2.1</productVersion>-->
-						<!--<txtProductVersion>txt product version</txtProductVersion>-->
-						<!--<productName>product name</productName>-->
-						<!--<internalName>internal name</internalName>-->
-						<!--<originalFilename>original.exe</originalFilename>-->
-					<!--</versionInfo>-->
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.mindtree.techworks.insight.releng</groupId>
-				<artifactId>maven-jsmooth-plugin</artifactId>
-				<version>0.2.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>jsmoothcompile</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<jsmoothFile>src/main/assembly/netlogin.jsmooth</jsmoothFile>
-					<setJarName>false</setJarName>
-					<includeDependencies>false</includeDependencies>
-					<iconLocation>src/main/resources/AppIcon 256.png</iconLocation>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 
@@ -216,13 +108,6 @@
 			<uniqueVersion>true</uniqueVersion>
 		</snapshotRepository>
 	</distributionManagement>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>mindtreeinsight</id>
-			<url>http://mindtreeinsight.svn.sourceforge.net/svnroot/mindtreeinsight/maven-repo/trunk/release</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<repositories>
 		<!-- UoA repository -->
@@ -241,10 +126,6 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-		</repository>
-		<repository>
-			<id>mindtreeinsight</id>
-			<url>http://mindtreeinsight.svn.sourceforge.net/svnroot/mindtreeinsight/maven-repo/trunk/release</url>
 		</repository>
 	</repositories>
 
