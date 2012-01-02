@@ -68,6 +68,7 @@ public class NetLoginGUI implements PingListener {
 
 	public NetLoginGUI(String upi, String password) {
 		initialize();
+		openWindow();
 		login(new PopulatedCredentialsCallback(upi, password));
 		minimizeWindow();
 		netLoginConnection.monitor();
@@ -102,18 +103,25 @@ public class NetLoginGUI implements PingListener {
 	public void createWindow() {
 		display = new Display();
 
-		// create an invisible parent window, this hides the task bar
-		Shell windowWrapper = new Shell();
+		if (isSystemTraySupported()) {
+			// create an invisible parent window, this hides the task bar
+			Shell windowWrapper = new Shell();
+			window = new Shell(windowWrapper, SWT.CLOSE | SWT.TITLE);
+		} else {
+        	window = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.MIN);
+		}
 
-        window = new Shell(windowWrapper, SWT.CLOSE | SWT.TITLE | SWT.MIN);
 		window.setText("NetLogin");
 
-		window.addShellListener(new ShellAdapter() {
-			public void shellClosed(ShellEvent e) {
-				e.doit = false;
-				window.setMinimized(true);
-			}
-		});
+		// if we're using the system tray, then close actually hides it
+		if (isSystemTraySupported()) {
+			window.addShellListener(new ShellAdapter() {
+				public void shellClosed(ShellEvent e) {
+					e.doit = false;
+					minimizeWindow();
+				}
+			});
+		}
 
 		window.setSize(270, 160);
 		window.setImages(Icons.getInstance().getWindowIcons());
