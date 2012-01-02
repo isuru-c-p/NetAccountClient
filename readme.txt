@@ -74,6 +74,15 @@ gate-test.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
 gate.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
 
 
+Memory usage
+
+java -Xmx3m -XX:PermSize=5m
+Perm size still goes to 20Mb, presumably due to Swing.
+
+Class unloading doesn't improve things
+java -Xmx3m -XX:PermSize=5m -XX:MaxPermSize=5m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled
+
+
 Reference
 
 SSPI and GSSAPI interoperability

@@ -6,29 +6,42 @@ import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
-import nz.ac.auckland.netlogin.util.SpringUtilities;
 import nz.ac.auckland.netlogin.util.SystemSettings;
-import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
-import java.awt.*;
-import java.awt.event.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.*;
 import java.beans.EventHandler;
 import java.lang.reflect.Method;
 
-public class NetLoginGUI extends JPanel implements PingListener {
+public class NetLoginGUI implements PingListener {
 
-	private JFrame window;
+	private Display display;
+	private Shell window;
 
-	private JLabel userLabel;
-	private JLabel planLabel;
-	private JLabel usageLabel;
-	private JLabel connectionErrorMessage;
+	private Composite disconnectedPanel;
+	private Composite connectingPanel;
+	private Composite connectedPanel;
+
+	private Label userLabel;
+	private Label planLabel;
+	private Label usageLabel;
+	private Label connectionErrorMessage;
 
 	private NetLoginPreferences preferences;
 
-	private JButton connectButton;
-	private JMenuItem loginMenuItem;
-	private JMenuItem logoutMenuItem;
+	private Button connectButton;
+	private MenuItem loginMenuItem;
+	private MenuItem logoutMenuItem;
 
 	private LoginDialog loginDialog;
 	private AboutDialog aboutDialog;
@@ -38,18 +51,19 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	private boolean connected = false;
 
 	private boolean useSystemTray = true;
-	private TrayIcon trayIcon;
+	private TrayItem trayIcon;
 
 	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
 
-    private JPanel mainPanel;
-	private JPanel bodyPanel;
+	private Composite bodyPanel;
+	private StackLayout bodyPanelLayout;
 
-    public NetLoginGUI() {
+	public NetLoginGUI() {
 		initialize();
 		openWindow();
 		netLoginConnection.monitor();
+		run();
 	}
 
 	public NetLoginGUI(String upi, String password) {
@@ -57,6 +71,7 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		login(new PopulatedCredentialsCallback(upi, password));
 		minimizeWindow();
 		netLoginConnection.monitor();
+		run();
 	}
 
 	private void initialize() {
@@ -64,44 +79,56 @@ public class NetLoginGUI extends JPanel implements PingListener {
 		netLoginConnection = new NetLoginConnection(this);
 
 		loadLookAndFeel();
-		initBody();
 		createWindow();
+		createDialogs();
+		createMenuBar();
+		initBody();
 		initTrayIcon();
 	}
 
-	private void loadLookAndFeel() {
-		try {
-            SystemSettings.setSystemPropertyDefault("apple.laf.useScreenMenuBar", "true");
-            SystemSettings.setSystemPropertyDefault("com.apple.macos.useScreenMenuBar", "true"); // historical
-            SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.apple.menu.about.name", "NetLogin");
-            SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.live-resize", "true");
+	private void createDialogs() {
+		loginDialog = new LoginDialog(window);
+		preferencesDialog = new PreferencesDialog(window, preferences);
+		aboutDialog = new AboutDialog(window);
+	}
 
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			// ignore - continue with the default look and feel
-		}
+	private void loadLookAndFeel() {
+		SystemSettings.setSystemPropertyDefault("apple.laf.useScreenMenuBar", "true");
+		SystemSettings.setSystemPropertyDefault("com.apple.macos.useScreenMenuBar", "true"); // historical
+		SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.apple.menu.about.name", "NetLogin");
+		SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.live-resize", "true");
 	}
 
 	public void createWindow() {
-        window = new JFrame("NetLogin");
-        window.setContentPane(mainPanel);
-        window.setResizable(false);
-        window.setJMenuBar(createMenuBar());
+		display = new Display();
 
-        window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		window.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                minimizeWindow();
-            }
-        });
+		// create an invisible parent window, this hides the task bar
+		Shell windowWrapper = new Shell();
 
-		window.setBounds(12, 12, 270, 160);
-		window.setLocationRelativeTo(null);
-		window.setIconImages(Icons.getInstance().getWindowIcons());
+        window = new Shell(windowWrapper, SWT.CLOSE | SWT.TITLE | SWT.MIN);
+		window.setText("NetLogin");
+
+		window.addShellListener(new ShellAdapter() {
+			public void shellClosed(ShellEvent e) {
+				e.doit = false;
+				window.setMinimized(true);
+			}
+		});
+
+		window.setSize(270, 160);
+		window.setImages(Icons.getInstance().getWindowIcons());
+	}
+
+	private void run() {
+		while (!window.isDisposed()) {
+			if (!display.readAndDispatch()) display.sleep();
+		}
+		display.dispose();
 	}
 	
 	public void login() {
 		login(loginDialog);
+		netLoginConnection.monitor();
 	}
 
 	protected void login(CredentialsCallback callback) {
@@ -109,147 +136,104 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public boolean isSystemTraySupported() {
-		return useSystemTray && SystemTray.isSupported();
+		return useSystemTray && display.getSystemTray() != null;
 	}
 	
 	public void openWindow() {
-		window.setExtendedState(Frame.NORMAL);
-		window.setVisible(true);
-		window.toFront();
+		window.setMinimized(false);
+		window.open();
+		window.forceActive();
 	}
 	
 	public void minimizeWindow() {
 		if (isSystemTraySupported()) {
 			window.setVisible(false);
 		} else {
-			window.setExtendedState(Frame.ICONIFIED);
+			window.setMinimized(true);
 		}
 	}
 
 	public void initBody() {
-		loginDialog = new LoginDialog();
-		preferencesDialog = new PreferencesDialog(preferences);
-		aboutDialog = new AboutDialog();
+		window.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
+		window.setLayout(SWTHelper.createMinimalGridLayout());
 
-		JLabel upiTitle = new JLabel("NetID/UPI:", JLabel.RIGHT);
-		JLabel planTitle = new JLabel("Internet Plan:", JLabel.RIGHT);
-		JLabel usageTitle = new JLabel("Used this month:", JLabel.RIGHT);
-		userLabel = createStrongLabel("");
-		planLabel = createStrongLabel("");
-		usageLabel = createStrongLabel("");
+		bodyPanel = new Composite(window, SWT.EMBEDDED);
+		bodyPanel.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		bodyPanelLayout = new StackLayout();
+		bodyPanel.setLayout(bodyPanelLayout);
 
-		connectButton = new JButton("Connect");
+		disconnectedPanel = new Composite(bodyPanel, SWT.EMBEDDED);
+		disconnectedPanel.setLayout(new GridLayout());
+		Label disconnectedLabel = SWTHelper.createStrongLabel(disconnectedPanel, "Not Connected");
+		disconnectedLabel.setAlignment(SWT.CENTER);
+		disconnectedLabel.setLayoutData(new GridData(GridData.FILL, GridData.END, true, true));
+		connectionErrorMessage = new Label(disconnectedPanel, SWT.NONE);
+		connectionErrorMessage.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, true, true));
+		connectionErrorMessage.setAlignment(SWT.CENTER);
+
+		connectingPanel = new Composite(bodyPanel, SWT.EMBEDDED);
+		connectingPanel.setLayout(new GridLayout());
+		Label connectingLabel = SWTHelper.createStrongLabel(connectingPanel, "Connecting...");
+		connectingLabel.setAlignment(SWT.CENTER);
+		connectingLabel.setLayoutData(new GridData(GridData.FILL, GridData.END, true, true));
+		ProgressBar connectingProgress = new ProgressBar(connectingPanel, SWT.HORIZONTAL | SWT.INDETERMINATE);
+		connectingProgress.setLayoutData(new GridData(GridData.CENTER, GridData.BEGINNING, false, true));
+
+		connectedPanel = SWTHelper.createForm(bodyPanel);
+		((GridLayout)connectedPanel.getLayout()).makeColumnsEqualWidth = true;
+		SWTHelper.createFormLabel(connectedPanel, "NetID/UPI:");
+		userLabel = SWTHelper.createStrongLabel(connectedPanel, "");
+		userLabel.setLayoutData(SWTHelper.formLayoutData());
+		SWTHelper.createFormLabel(connectedPanel, "Internet Plan:");
+		planLabel = SWTHelper.createStrongLabel(connectedPanel, "");
+		planLabel.setLayoutData(SWTHelper.formLayoutData());
+		SWTHelper.createFormLabel(connectedPanel, "Used this month:");
+		usageLabel = SWTHelper.createStrongLabel(connectedPanel, "");
+		usageLabel.setLayoutData(SWTHelper.formLayoutData());
+
+		selectBodyPanel(disconnectedPanel);
+
+		Composite buttonPanel = SWTHelper.createButtonPanel(window);
+		connectButton = SWTHelper.createButton(buttonPanel, "Connect");
 		connectButton.setToolTipText("Login to NetAccount");
-		connectButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+
+		connectButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
 				if (!connected) {
 					login();
-					netLoginConnection.monitor();
                 } else {
-					netLoginConnection.unmonitor();
 					disconnect();
                 }
 			}
 		});
-
-		JPanel connectedPanel = new JPanel(new SpringLayout());
-		connectedPanel.add(upiTitle);
-		connectedPanel.add(userLabel);
-		connectedPanel.add(planTitle);
-		connectedPanel.add(planLabel);
-		connectedPanel.add(usageTitle);
-		connectedPanel.add(usageLabel);
-		SpringUtilities.makeCompactGrid(connectedPanel, 3, 2, 5, 5, 5, 5);
-
-        connectionErrorMessage = new JLabel();
-
-		JComponent disconnectedPanel = alignVertically(
-				createFlow(createStrongLabel("Not Connected")),
-				createFlow(connectionErrorMessage));
-
-        JProgressBar connectingProgress = new JProgressBar();
-        connectingProgress.setIndeterminate(true);
-
-		JComponent connectingPanel = alignVertically(
-				createFlow(createStrongLabel("Connecting...")),
-				createFlow(connectingProgress));
-
-		bodyPanel = new JPanel(new CardLayout());
-		bodyPanel.add("disconnected", alignVertically(disconnectedPanel));
-		bodyPanel.add("connecting", alignVertically(connectingPanel));
-		bodyPanel.add("connected", alignHorizontally(connectedPanel));
-
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 7));
-		buttonPanel.add(connectButton);
-
-		mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-		mainPanel.add(bodyPanel);
-		mainPanel.add(new JSeparator());
-		mainPanel.add(buttonPanel);
 	}
 
-	private JLabel createStrongLabel(String labelText) {
-		JLabel label = new JLabel(labelText);
-		label.setFont(label.getFont().deriveFont(Font.BOLD));
-		return label;
+	private void selectBodyPanel(Composite panel) {
+		assert disconnectedPanel == panel || connectingPanel == panel || connectedPanel == panel;
+		bodyPanelLayout.topControl = panel;
+		bodyPanel.layout();
 	}
 
-	private JPanel createFlow(JComponent component) {
-        JPanel flowPanel = new JPanel(new FlowLayout());
-        flowPanel.add(component);
-        return flowPanel;
-    }
-
-	private JPanel createMessagePanel(String text, Font font, Color color, Image image) {
-		JLabel messageLabel = new JLabel(text);
-		messageLabel.setFont(font);
-		messageLabel.setForeground(color);
-		if (image != null) messageLabel.setIcon(new ImageIcon(image));
-		JPanel messagePanel = new JPanel(new FlowLayout());
-		messagePanel.add(messageLabel);
-		return messagePanel;
-	}
-
-	private JComponent alignHorizontally(JComponent... components) {
-		Box connectingPanel = Box.createHorizontalBox();
-		connectingPanel.add(Box.createHorizontalGlue());
-        for(JComponent component : components) {
-            connectingPanel.add(component);
-        }
-		connectingPanel.add(Box.createHorizontalGlue());
-		return connectingPanel;
-	}
-
-	private JComponent alignVertically(JComponent... components) {
-		Box connectingPanel = Box.createVerticalBox();
-		connectingPanel.add(Box.createVerticalGlue());
-        for(JComponent component : components) {
-            connectingPanel.add(component);
-        }
-		connectingPanel.add(Box.createVerticalGlue());
-		return connectingPanel;
-	}
-
-	private void disconnect() {
+	public void disconnect() {
+		netLoginConnection.unmonitor();
 		netLoginConnection.logout();
 	}
 
 	public void connecting() {
-		SwingUtilities.invokeLater(new Runnable() {
+		display.asyncExec(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(false);
 				connectionErrorMessage.setText("");
-				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "connecting");
+				selectBodyPanel(connectingPanel);
 			}
 		});
 	}
 
 	public void connectionFailed(final String message) {
-		SwingUtilities.invokeLater(new Runnable() {
+		display.asyncExec(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(true);
-				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "disconnected");
+				selectBodyPanel(disconnectedPanel);
 				if (message != null) connectionErrorMessage.setText(message);
 			}
 		});
@@ -258,15 +242,15 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	public void connected(final String username, int ipUsage, NetLoginPlan plan) {
 		this.connected = true;
 		update(ipUsage, plan);
-		SwingUtilities.invokeLater(new Runnable() {
+		display.asyncExec(new Runnable() {
 			public void run() {
 				userLabel.setText(username);
-				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "connected");
+				selectBodyPanel(connectedPanel);
 
 				connectButton.setToolTipText("Disconnect from NetAccount");
 				connectButton.setText("Disconnect");
 				connectButton.setEnabled(true);
-				
+
 				loginMenuItem.setEnabled(false);
 				logoutMenuItem.setEnabled(true);
 				updateTrayLabel();
@@ -276,10 +260,10 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 	public void disconnected() {
 		this.connected = false;
-		SwingUtilities.invokeLater(new Runnable() {
+		display.asyncExec(new Runnable() {
 			public void run() {
 				connectButton.setText("Connect");
-				((CardLayout)bodyPanel.getLayout()).show(bodyPanel, "disconnected");
+				selectBodyPanel(disconnectedPanel);
 
 				loginMenuItem.setEnabled(true);
 				logoutMenuItem.setEnabled(false);
@@ -289,60 +273,42 @@ public class NetLoginGUI extends JPanel implements PingListener {
 	}
 
 	public void update(final int ipUsage, final NetLoginPlan plan) {
-		SwingUtilities.invokeLater(new Runnable() {
+		display.asyncExec(new Runnable() {
 			public void run() {
 				float ipUsageMb = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
 				usageLabel.setText("" + ipUsageMb + " MBs");
-				usageLabel.invalidate();
 				planLabel.setText(plan.toString());
-				planLabel.invalidate();
-				planLabel.getParent().validate();
 			}
 		});
 	}
 
-	private JMenuBar createMenuBar() {
-		loginMenuItem = new JMenuItem("Login", 'l');
-		logoutMenuItem = new JMenuItem("Logout", 'l');
+	private void createMenuBar() {
+		Menu menuBar = new Menu(window, SWT.BAR);
+		window.setMenuBar(menuBar);
+
+		Menu netLoginMenu = SWTHelper.createMenu(window, menuBar, "NetLogin", 'n');
+		loginMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Login", 'l');
+		logoutMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Logout", 'l');
 		logoutMenuItem.setEnabled(false);
-		JMenuItem changePassMenuItem = new JMenuItem("Change Password", 'p');
-		JMenuItem preferencesMenuItem = new JMenuItem("Preferences", 'r');
-		JMenuItem quitMenuItem = new JMenuItem("Exit", 'x');
-		JMenuItem aboutMenuItem = new JMenuItem("About", 'a');
-		JMenuItem chargeRatesMenuItem = new JMenuItem("Show Charge Rates", 'c');
+		SWTHelper.addMenuSeparator(netLoginMenu);
+		MenuItem preferencesMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Preferences", 'r');
+		SWTHelper.addMenuSeparator(netLoginMenu);
+		MenuItem quitMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Exit", 'x');
 
-		JMenu netLoginMenu = new JMenu("NetLogin");
-		netLoginMenu.setMnemonic('n');
-		netLoginMenu.add(loginMenuItem);
-		netLoginMenu.add(logoutMenuItem);
-		netLoginMenu.addSeparator();
-		netLoginMenu.add(preferencesMenuItem);
-		netLoginMenu.addSeparator();
-		netLoginMenu.add(quitMenuItem);
+		Menu servicesMenu = SWTHelper.createMenu(window, menuBar, "Services", 's');
+		MenuItem changePassMenuItem = SWTHelper.createMenuItem(servicesMenu, "Change Password", 'p');
+		MenuItem chargeRatesMenuItem = SWTHelper.createMenuItem(servicesMenu, "Show Charge Rates", 'c');
 
-		JMenu servicesMenu = new JMenu("Services");
-		servicesMenu.setMnemonic('s');
-		servicesMenu.add(changePassMenuItem);
-		servicesMenu.add(chargeRatesMenuItem);
+		Menu helpMenu = SWTHelper.createMenu(window, menuBar, "Help", 'h');
+		MenuItem aboutMenuItem = SWTHelper.createMenuItem(helpMenu, "About", 'a');
 
-		JMenu helpMenu = new JMenu("Help");
-		helpMenu.setMnemonic('h');
-		helpMenu.add(aboutMenuItem);
-
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(netLoginMenu);
-		menuBar.add(servicesMenu);
-		menuBar.add(helpMenu);
-
-		loginMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "login"));
-		logoutMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "disconnect"));
-		preferencesMenuItem.addActionListener(EventHandler.create(ActionListener.class, preferencesDialog, "open"));
-		changePassMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "changePassword"));
-		quitMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "quit"));
-		aboutMenuItem.addActionListener(EventHandler.create(ActionListener.class, aboutDialog, "open"));
-		chargeRatesMenuItem.addActionListener(EventHandler.create(ActionListener.class, this, "showChargeRates"));
-
-		return menuBar;
+		loginMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "login"));
+		logoutMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "disconnect"));
+		preferencesMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, preferencesDialog, "open"));
+		changePassMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "changePassword"));
+		quitMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "quit"));
+		aboutMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, aboutDialog, "open"));
+		chargeRatesMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "showChargeRates"));
 	}
 
 	public void showChargeRates() {
@@ -392,48 +358,42 @@ public class NetLoginGUI extends JPanel implements PingListener {
 
 		String label = "Disconnected";
 		if (connected) label = "Connected";
-		trayIcon.setToolTip(label);
+		trayIcon.setToolTipText(label);
 	}
 
 	private void initTrayIcon() {
-        if (!isSystemTraySupported()) return;
-		PopupMenu popup = new PopupMenu();
-		
-		MenuItem rateItem = new MenuItem("Show Charge Rates");
-		MenuItem passwordItem = new MenuItem("Change Password");
-		MenuItem openItem = new MenuItem("Open NetLogin");
-		MenuItem exitItem = new MenuItem("Exit");
+		if (!isSystemTraySupported()) return;
 
-		rateItem.addActionListener(EventHandler.create(ActionListener.class, this, "showChargeRates"));
-		passwordItem.addActionListener(EventHandler.create(ActionListener.class, this, "changePassword"));
-		openItem.addActionListener(EventHandler.create(ActionListener.class, this, "openWindow"));
-		exitItem.addActionListener(EventHandler.create(ActionListener.class, this, "quit"));
-		
-		popup.add(passwordItem);
-		popup.add(rateItem);
-		popup.addSeparator();
-		popup.add(openItem);
-		popup.add(exitItem);
+		final Menu popup = new Menu(window, SWT.POP_UP);
+		MenuItem passwordItem = SWTHelper.createMenuItem(popup, "Change Password", 'p');
+		MenuItem rateItem = SWTHelper.createMenuItem(popup, "Show Charge Rates", 'c');
+		SWTHelper.addMenuSeparator(popup);
+		MenuItem openItem = SWTHelper.createMenuItem(popup, "Open NetLogin", 'o');
+		MenuItem exitItem = SWTHelper.createMenuItem(popup, "Exit", 'x');
 
-		Dimension trayIconSize = SystemTray.getSystemTray().getTrayIconSize();
-		Image trayIconImage = Icons.getInstance().getClosestIcon(trayIconSize);
-		trayIcon = new TrayIcon(trayIconImage, "NetLogin", popup);
-		trayIcon.setImageAutoSize(false);
-		trayIcon.setToolTip("NetLogin");
+		rateItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "showChargeRates"));
+		passwordItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "changePassword"));
+		openItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "openWindow"));
+		exitItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "quit"));
 
-		// only open if the primary button was pressed, so we don't conflict with the context menu
-		trayIcon.addMouseListener(new MouseInputAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) openWindow();
+		Image trayIconImage = Icons.getInstance().getClosestIcon(24);
+
+		Tray tray = display.getSystemTray();
+		trayIcon = new TrayItem(tray, SWT.NONE);
+		trayIcon.setToolTipText("NetLogin");
+		trayIcon.setImage(trayIconImage);
+
+		trayIcon.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				openWindow();
 			}
 		});
-				
-		SystemTray tray = SystemTray.getSystemTray();
-		try {
-			tray.add(trayIcon); 
-	   } catch (Exception e) {
-			System.err.println("Unable to add system tray: " + e.getMessage());
-		}
+
+		trayIcon.addMenuDetectListener(new MenuDetectListener() {
+			public void menuDetected(MenuDetectEvent e) {
+				popup.setVisible(true);
+			}
+		});
 	}
 
 }

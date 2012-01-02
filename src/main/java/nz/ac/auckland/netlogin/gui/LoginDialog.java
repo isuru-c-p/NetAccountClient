@@ -2,123 +2,115 @@ package nz.ac.auckland.netlogin.gui;
 
 import nz.ac.auckland.netlogin.LoginCancelled;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
-import nz.ac.auckland.netlogin.util.SpringUtilities;
-import javax.swing.*;
-import javax.swing.event.CaretListener;
-import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import java.beans.EventHandler;
-import java.lang.reflect.InvocationTargetException;
 
 public class LoginDialog implements CredentialsCallback {
 
-	private JDialog dialog;
-	private JTextField userText;
-	private JTextField passwordText;
-	private JButton loginButton;
-	private JButton cancelButton;
-	private JCheckBox rememberMeCheckbox;
-	private JLabel userLabel;
-	private JLabel passwordLabel;
-    private String password = null;
+	private volatile boolean awaitingCredentials = false;
+	private volatile String user = null;
+	private volatile String password = null;
 
-	public LoginDialog() {
-		createComponents();
+	private Shell dialog;
+	private Text userText;
+	private Text passwordText;
+	private Button loginButton;
+	private Button cancelButton;
+
+	public LoginDialog(Shell shell) {
+		createComponents(shell);
 		registerEvents();
-		layout();
-	}
-
-	protected void layout() {
-		JPanel buttonPanel = new JPanel(new FlowLayout());
-		buttonPanel.add(loginButton);
-		buttonPanel.add(cancelButton);
-
-		JPanel formPanel = new JPanel(new SpringLayout());
-		formPanel.add(userLabel);
-		formPanel.add(userText);
-		formPanel.add(passwordLabel);
-		formPanel.add(passwordText);
-		SpringUtilities.makeCompactGrid(formPanel, 2, 2, 5, 5, 5, 5);
-
-		JPanel rememberPanel = new JPanel(new FlowLayout());
-		rememberPanel.add(rememberMeCheckbox);
-
-		Box bodyPanel = Box.createVerticalBox();
-		bodyPanel.add(formPanel);
-		// todo: enable remember upi panel - bodyPanel.add(rememberPanel);
-		bodyPanel.add(buttonPanel);
-
-		JPanel marginPanel = new JPanel(new BorderLayout());
-		marginPanel.add(bodyPanel, BorderLayout.CENTER);
-		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.NORTH);
-		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.SOUTH);
-		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.WEST);
-		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.EAST);
-
-		dialog.setContentPane(marginPanel);
-		dialog.pack();
-		dialog.setLocationRelativeTo(null);
 	}
 
 	protected void registerEvents() {
-		// clear the retrievePassword dialog when the window closes
-		dialog.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent windowEvent) {
-                LoginDialog.this.clearPassword();
-            }
-        });
-
 		// enable the login button if the username and password are supplied
-		CaretListener detailsValidator = EventHandler.create(CaretListener.class, this, "validateDetails");
-		userText.addCaretListener(detailsValidator);
-		passwordText.addCaretListener(detailsValidator);
+		ModifyListener detailsValidator = EventHandler.create(ModifyListener.class, this, "validateDetails");
+		userText.addModifyListener(detailsValidator);
+		passwordText.addModifyListener(detailsValidator);
 
 		// process the login event
-		ActionListener loginAction = EventHandler.create(ActionListener.class, this, "login");
-		loginButton.addActionListener(loginAction);
-		passwordText.addActionListener(loginAction);
+		SelectionListener loginAction = EventHandler.create(SelectionListener.class, this, "login");
+		loginButton.addSelectionListener(loginAction);
+		passwordText.addSelectionListener(loginAction);
 
 		// close the dialog
-		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
+		cancelButton.addSelectionListener(EventHandler.create(SelectionListener.class, this, "close"));
 	}
 
-	protected void createComponents() {
-		dialog = new JDialog();
-		dialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
-		dialog.setTitle("NetLogin - Login");
-		dialog.setVisible(false);
-		dialog.setResizable(false);
+	protected void createComponents(Shell shell) {
+		dialog = new Shell(shell, (SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL) & ~SWT.CLOSE);
+		dialog.setLayout(SWTHelper.createMinimalGridLayout());
+		dialog.setText("NetLogin - Login");
 
-		userText = new JTextField(20);
-		passwordText = new JPasswordField(20);
+		Composite formPanel = SWTHelper.createForm(dialog);
+		formPanel.setLayoutData(SWTHelper.formLayoutData());
 
-		loginButton = new JButton("Connect");
+		SWTHelper.createFormLabel(formPanel, "NetID/UPI:");
+		userText = new Text(formPanel, SWT.BORDER);
+		userText.setLayoutData(SWTHelper.formLayoutData());
+
+		SWTHelper.createFormLabel(formPanel, "Password:");
+		passwordText = new Text(formPanel, SWT.BORDER);
+		passwordText.setEchoChar('\u25CF');
+		passwordText.setLayoutData(SWTHelper.formLayoutData());
+
+//		rememberMeCheckbox = new JCheckBox("Remember NetID/UPI");
+//		JPanel rememberPanel = new JPanel(new FlowLayout());
+//		rememberPanel.add(rememberMeCheckbox);
+
+		Composite buttonPanel = SWTHelper.createButtonPanel(dialog);
+		loginButton = SWTHelper.createButton(buttonPanel, "Connect");
 		loginButton.setEnabled(false);
-		loginButton.setDefaultCapable(true);
+		dialog.setDefaultButton(loginButton);
+		cancelButton = SWTHelper.createButton(buttonPanel, "Cancel");
 
-		cancelButton = new JButton("Cancel");
-
-		rememberMeCheckbox = new JCheckBox("Remember NetID/UPI");
-
-		userLabel = new JLabel("NetID/UPI:", JLabel.TRAILING);
-		passwordLabel = new JLabel("Password:", JLabel.TRAILING);
+		dialog.pack();
 	}
 
 	public void open() {
-        this.password = null;
-		dialog.setVisible(true);
+		awaitingCredentials = true;
+        password = null;
+
+		dialog.getDisplay().asyncExec(new Runnable() {
+			public void run() {
+				dialog.open();
+				userText.setFocus();
+			}
+		});
+	}
+
+	private void waitForClose() {
+		// wait until the dialog is closed
+		while (awaitingCredentials) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// ignore and continue
+			}
+		}
+	}
+
+	public void login() {
+		this.user = userText.getText();
+		this.password = passwordText.getText();
+		close();
 	}
 
 	public void close() {
         clearPassword();
 		dialog.setVisible(false);
+		awaitingCredentials = false;
 	}
 
 	public void clearPassword() {
 		passwordText.setText("");
+		passwordText.update(); // update the buffer now to prevent flicker when then dialog is next opened
 	}
 
 	public void validateDetails() {
@@ -129,39 +121,15 @@ public class LoginDialog implements CredentialsCallback {
 		}
 	}
 
-	public void login() {
-		this.password = passwordText.getText();
-		close();
-	}
-
 	public boolean requestCredentials() throws LoginCancelled {
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
-					open();
-
-					// wait until the dialog is closed
-					while (dialog.isVisible()) {
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							// ignore and continue
-						}
-					}
-				}
-			});
-		} catch (InterruptedException e) {
-			return false;
-		} catch (InvocationTargetException e) {
-			return false;
-		}
-
-		if (password == null) throw new LoginCancelled();
+		open();
+		waitForClose();
+		if (user == null || password == null) throw new LoginCancelled();
 		return true;
 	}
 
 	public String getUsername() {
-		return userText.getText();
+		return user;
 	}
 
 	public String retrievePassword() {

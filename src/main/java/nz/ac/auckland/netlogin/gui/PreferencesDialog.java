@@ -2,38 +2,36 @@ package nz.ac.auckland.netlogin.gui;
 
 import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.negotiation.AuthenticatorFactory;
-import nz.ac.auckland.netlogin.util.SpringUtilities;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import java.beans.EventHandler;
-import java.util.Vector;
+import java.util.Collection;
 
 public class PreferencesDialog {
 
 	private NetLoginPreferences preferences;
-	private JDialog dialog;
-	private JButton okButton;
-	private JButton cancelButton;
-	private JLabel credentialSourceLabel;
-	private JComboBox credentialSourceCombo;
-	private JLabel serverLabel;
-	private JTextField serverText;
-	private JLabel realmLabel;
-	private JTextField realmText;
-	private JLabel reconnectLabel;
-	private JComboBox reconnectCombo;
+	private Shell dialog;
+	private Button okButton;
+	private Button cancelButton;
+	private Combo credentialSourceCombo;
+	private Text serverText;
+	private Text realmText;
+	private Combo reconnectCombo;
 
-	public PreferencesDialog(NetLoginPreferences preferences) {
+	public PreferencesDialog(Shell shell, NetLoginPreferences preferences) {
 		this.preferences = preferences;
-		createComponents();
+		createComponents(shell);
 		registerEvents();
-		layout();
 	}
 
 	public void open() {
 		read();
-		dialog.setVisible(true);
+		dialog.open();
 	}
 
 	public void close() {
@@ -47,80 +45,58 @@ public class PreferencesDialog {
 
 	public void read() {
 		serverText.setText(preferences.getServer());
-		credentialSourceCombo.setSelectedItem(preferences.getCredentialSource());
+		SWTHelper.selectComboItem(credentialSourceCombo, preferences.getCredentialSource());
         realmText.setText(preferences.getRealm());
-		reconnectCombo.setSelectedItem(preferences.getReconnect() ? "Yes" : "No");
+		SWTHelper.selectComboItem(reconnectCombo, preferences.getReconnect() ? "Yes" : "No");
 	}
 
 	public void save() {
 		preferences.setServer(serverText.getText());
-		preferences.setCredentialSource((String)credentialSourceCombo.getSelectedItem());
+		preferences.setCredentialSource(credentialSourceCombo.getText());
         preferences.setRealm(realmText.getText());
-		preferences.setReconnect(reconnectCombo.getSelectedItem().equals("Yes"));
+		preferences.setReconnect(reconnectCombo.getText().equals("Yes"));
 		preferences.savePreferences();
 	}
 
-	protected void createComponents() {
-		dialog = new JDialog();
-		dialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
-		dialog.setResizable(false);
-		dialog.setTitle("NetLogin - Preferences");
+	protected void createComponents(Shell parent) {
+		dialog = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+		dialog.setLayout(SWTHelper.createMinimalGridLayout());
+		dialog.setText("NetLogin - Preferences");
 
-		okButton = new JButton("Ok");
-		okButton.setDefaultCapable(true);
+		Composite formPanel = SWTHelper.createForm(dialog);
+		formPanel.setLayoutData(SWTHelper.formLayoutData());
 
-		cancelButton = new JButton("Cancel");
+		SWTHelper.createFormLabel(formPanel, "Server:");
+		serverText = new Text(formPanel, SWT.BORDER);
+		serverText.setLayoutData(SWTHelper.formLayoutData());
 
-        Vector<String> credentialSources = new Vector<String>(AuthenticatorFactory.getInstance().getNames());
+		SWTHelper.createFormLabel(formPanel, "Credentials:");
+		Collection<String> credentialSources = AuthenticatorFactory.getInstance().getNames();
+		String[] credentialSourcesArray = credentialSources.toArray(new String[credentialSources.size()]);
+		credentialSourceCombo = new Combo(formPanel, SWT.DROP_DOWN);
+		credentialSourceCombo.setItems(credentialSourcesArray);
+		credentialSourceCombo.setLayoutData(SWTHelper.formLayoutData());
 
-		credentialSourceLabel = new JLabel("Credentials:", JLabel.TRAILING);
-		credentialSourceCombo = new JComboBox(credentialSources);
+		SWTHelper.createFormLabel(formPanel, "Server realm:");
+		realmText = new Text(formPanel, SWT.BORDER);
+		realmText.setLayoutData(SWTHelper.formLayoutData());
 
-		serverLabel = new JLabel("Server:", JLabel.TRAILING);
-		serverText = new JTextField(20);
+		SWTHelper.createFormLabel(formPanel, "Reconnect:");
+		reconnectCombo = new Combo(formPanel, SWT.DROP_DOWN);
+		reconnectCombo.setItems(new String[]{"Yes", "No"});
+		reconnectCombo.setLayoutData(SWTHelper.formLayoutData());
 
-		realmLabel = new JLabel("Server realm:", JLabel.TRAILING);
-		realmText = new JTextField(20);
+		Composite buttonPanel = SWTHelper.createButtonPanel(dialog);
+		okButton = SWTHelper.createButton(buttonPanel, "Ok");
+		dialog.setDefaultButton(okButton);
+		cancelButton = SWTHelper.createButton(buttonPanel, "Cancel");
 
-		reconnectLabel = new JLabel("Reconnect:", JLabel.TRAILING);
-		reconnectCombo = new JComboBox(new Object[] { "Yes", "No" });
+		dialog.pack();
 	}
 
 	protected void registerEvents() {
-		okButton.addActionListener(EventHandler.create(ActionListener.class, this, "done"));
-		cancelButton.addActionListener(EventHandler.create(ActionListener.class, this, "close"));
-	}
-
-	protected void layout() {
-		JPanel buttonPanel = new JPanel(new FlowLayout());
-		buttonPanel.add(okButton);
-		buttonPanel.add(cancelButton);
-
-		JPanel formPanel = new JPanel(new SpringLayout());
-		formPanel.add(serverLabel);
-		formPanel.add(serverText);
-		formPanel.add(credentialSourceLabel);
-		formPanel.add(credentialSourceCombo);
-		formPanel.add(realmLabel);
-		formPanel.add(realmText);
-		formPanel.add(reconnectLabel);
-		formPanel.add(reconnectCombo);
-		SpringUtilities.makeCompactGrid(formPanel, 4, 2, 5, 5, 5, 5);
-
-		Box bodyPanel = Box.createVerticalBox();
-		bodyPanel.add(formPanel);
-		bodyPanel.add(buttonPanel);
-
-		JPanel marginPanel = new JPanel(new BorderLayout());
-		marginPanel.add(bodyPanel, BorderLayout.CENTER);
-		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.NORTH);
-		marginPanel.add(Box.createVerticalStrut(10), BorderLayout.SOUTH);
-		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.WEST);
-		marginPanel.add(Box.createHorizontalStrut(20), BorderLayout.EAST);
-
-		dialog.setContentPane(marginPanel);
-		dialog.pack();
-		dialog.setLocationRelativeTo(null);
+		okButton.addSelectionListener(EventHandler.create(SelectionListener.class, this, "done"));
+		cancelButton.addSelectionListener(EventHandler.create(SelectionListener.class, this, "close"));
 	}
 
 }

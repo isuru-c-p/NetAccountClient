@@ -1,18 +1,18 @@
 package nz.ac.auckland.netlogin.gui;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
+import org.eclipse.swt.SWTException;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Icons {
 
 	private static Icons instance;
 
 	private static final int[] windowIconSizes = { 16, 32, 128, 256 };
-	private List<BufferedImage> windowIcons;
+	private ArrayList<Image> windowIcons;
 
 	public static Icons getInstance() {
 		if (instance == null) instance = new Icons();
@@ -24,30 +24,47 @@ public class Icons {
 	}
 
 	private void loadImages() {
-		windowIcons = new ArrayList<BufferedImage>();
+		windowIcons = new ArrayList<Image>();
 		for(int iconSize : windowIconSizes) {
-			windowIcons.add(loadImage("AppIcon " + iconSize + ".png"));
+			Image image = loadImage("AppIcon " + iconSize + ".png");
+			if (image != null) windowIcons.add(image);
 		}
 	}
 
-	private BufferedImage loadImage(String imageName) {
-		BufferedImage image = null;
-		try {
-			image = ImageIO.read(this.getClass().getResource("/" + imageName));
-		} catch (IOException e) {
-			// treat it the same as image not found
+	private Image loadImage(String imageName) {
+		Image image = null;
+		
+		InputStream stream = this.getClass().getResourceAsStream("/" + imageName);
+		if (stream != null) {
+			try {
+				image = new Image(Display.getDefault(), stream);
+			} catch (SWTException e) {
+				// treat it the same as image not found
+			} finally {
+				try {
+					stream.close();
+				} catch (IOException e) {
+					// ignore
+				}
+			}
 		}
+
 		if (image == null) throw new RuntimeException("Image not found: " + imageName);
 		return image;
 	}
 
-	public List<? extends Image> getWindowIcons() {
-		return windowIcons;
+	public Image[] getWindowIcons() {
+		return windowIcons.toArray(new Image[windowIcons.size()]);
 	}
 
-	public Image getClosestIcon(Dimension size) {
-		for(BufferedImage icon : windowIcons) {
-			if (icon.getWidth() >= size.getWidth()) return icon;
+	public Image getLargestIcon() {
+		return windowIcons.get(windowIcons.size() - 1);
+	}
+
+	public Image getClosestIcon(int size) {
+		if (windowIcons.isEmpty()) return null;
+		for(Image icon : windowIcons) {
+			if (icon.getBounds().width >= size) return icon;
 		}
 		return windowIcons.get(windowIcons.size() - 1);
 	}
