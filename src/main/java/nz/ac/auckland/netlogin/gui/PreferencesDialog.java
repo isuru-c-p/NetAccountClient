@@ -73,7 +73,7 @@ public class PreferencesDialog {
 		SWTHelper.createFormLabel(formPanel, "Credentials:");
 		Collection<String> credentialSources = AuthenticatorFactory.getInstance().getNames();
 		String[] credentialSourcesArray = credentialSources.toArray(new String[credentialSources.size()]);
-		credentialSourceCombo = new Combo(formPanel, SWT.DROP_DOWN);
+		credentialSourceCombo = new Combo(formPanel, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.SINGLE);
 		credentialSourceCombo.setItems(credentialSourcesArray);
 		credentialSourceCombo.setLayoutData(SWTHelper.formLayoutData());
 
@@ -82,7 +82,7 @@ public class PreferencesDialog {
 		realmText.setLayoutData(SWTHelper.formLayoutData());
 
 		SWTHelper.createFormLabel(formPanel, "Reconnect:");
-		reconnectCombo = new Combo(formPanel, SWT.DROP_DOWN);
+		reconnectCombo = new Combo(formPanel, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.SINGLE);
 		reconnectCombo.setItems(new String[]{"Yes", "No"});
 		reconnectCombo.setLayoutData(SWTHelper.formLayoutData());
 
