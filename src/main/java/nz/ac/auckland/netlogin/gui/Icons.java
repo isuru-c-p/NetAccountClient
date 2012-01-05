@@ -26,7 +26,7 @@ public class Icons {
 	private void loadImages() {
 		windowIcons = new ArrayList<Image>();
 		for(int iconSize : windowIconSizes) {
-			Image image = loadImage("AppIcon " + iconSize + ".png");
+			Image image = loadImage("AppIcon" + iconSize + ".png");
 			if (image != null) windowIcons.add(image);
 		}
 	}
