@@ -11,7 +11,8 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
 
     public static final byte[] MAGIC_GSS = "gss:".getBytes();
     public static final byte[] MAGIC_PAYLOAD = "msg:".getBytes();
-    public static final List<String> allowedRealms = Arrays.asList("UOA.AUCKLAND.AC.NZ", "UOATEST.AUCKLAND.AC.NZ", "AD.EC.AUCKLAND.AC.NZ");
+
+    public static final String ALLOWED_REALM_SUFFIX = ".AUCKLAND.AC.NZ";
 
     protected abstract String getUserName() throws LoginException;
 
@@ -43,7 +44,7 @@ public abstract class AbstractGSSAuthenticator implements Authenticator {
 		String userName = userPrincipalParts[0];
         String realm = userPrincipalParts[1].toUpperCase();
 
-        if (!allowedRealms.contains(realm)) throw new LoginException("Realm not supported for authentication");
+        if (!realm.endsWith(ALLOWED_REALM_SUFFIX)) throw new LoginException("Realm not supported for authentication");
 
         return new AuthenticationRequest(userName, outStream.toByteArray());
     }

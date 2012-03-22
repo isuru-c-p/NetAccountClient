@@ -18,7 +18,7 @@
 			</activation>
 			<properties>
 				<swt.groupId>org.eclipse.swt</swt.groupId>
-				<swt.artifactId>org.eclipse.swt.cocoa.macosx</swt.artifactId>
+				<swt.artifactId>org.eclipse.swt.cocoa.macosx.x86_64</swt.artifactId>
 			</properties>
 		</profile>
 		<profile>
@@ -46,7 +46,7 @@
 			-->
 			<groupId>${swt.groupId}</groupId>
 			<artifactId>${swt.artifactId}</artifactId>
-			<version>3.7.1</version>
+			<version>3.7.2</version>
 			<!-- SWT isn't optional, but because it's platform specific let the caller choose an approperiate one -->
 			<optional>true</optional>
 		</dependency>

@@ -25,8 +25,21 @@ Create account
 
 Don't create the SPN manually, ktpass does it as part of creating the keytab!
 On the Domain Controller, and run this from a UAC command prompt:
-setspn.exe -U -S netlogin/gate-test.ec.auckland.ac.nz uoatest\gate-test
+setspn.exe -U -S netlogin/gate-dev.ec.auckland.ac.nz uoatest\gate-dev
 
 Create the keytab
 ktpass /out gate-dev.keytab /princ netlogin/gate-dev.ec.auckland.ac.nz@UOATEST.AUCKLAND.AC.NZ /mapuser uoatest\gate-dev /ptype KRB5_NT_PRINCIPAL +rndpass /crypto RC4-HMAC-NT
 
+
+Creating a service principal on MIT Kerberos
+
+addprinc -randkey netlogin/gate-dev.ec.auckland.ac.nz@TEST.EC.AUCKLAND.AC.NZ
+ktadd -k gatedev_ectest.keytab -e des3-cbc-sha1:normal netlogin/gate-dev.ec.auckland.ac.nz@TEST.EC.AUCKLAND.AC.NZ
+
+
+Merge keytabs
+
+ktutil
+rkt netlogin_gate-dev.keytab
+rkt gate-dev.keytab
+wkt keytab
