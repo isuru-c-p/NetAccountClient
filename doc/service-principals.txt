@@ -1,0 +1,32 @@
+Service principal list
+
+gate-dev.ec.auckland.ac.nz/UOATEST.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/UOATEST.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/UOA.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/AD.EC.AUCKLAND.AC.NZ
+
+gate-dev.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+gate-test.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+gate.ec.auckland.ac.nz/EC.AUCKLAND.AC.NZ
+
+
+Creating a service principal on Active Directory
+
+Create account
++ full name = fqdn
++ account name = fqdn
++ pre-2000 name = hostname
+
+Don't create the SPN manually, ktpass does it as part of creating the keytab!
+On the Domain Controller, and run this from a UAC command prompt:
+setspn.exe -U -S netlogin/gate-test.ec.auckland.ac.nz uoatest\gate-test
+
+Create the keytab
+ktpass /out gate-dev.keytab /princ netlogin/gate-dev.ec.auckland.ac.nz@UOATEST.AUCKLAND.AC.NZ /mapuser uoatest\gate-dev /ptype KRB5_NT_PRINCIPAL +rndpass /crypto RC4-HMAC-NT
+

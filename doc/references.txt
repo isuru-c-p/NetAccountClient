@@ -1,0 +1,13 @@
+References
+
+SSPI and GSSAPI interoperability
+http://msdn.microsoft.com/en-us/library/ms995352.aspx
+http://msdn.microsoft.com/en-us/library/windows/desktop/aa380496(v=vs.85).aspx
+
+API (Secur32)
+http://msdn.microsoft.com/en-us/library/windows/desktop/aa378261(v=vs.85).aspx
+https://github.com/twall/jna/blob/master/contrib/platform/src/com/sun/jna/platform/win32/Secur32.java
+
+Using JNA with Secur32
+http://code.dblock.org/jna-acquirecredentialshandle-initializesecuritycontext-and-acceptsecuritycontext-establishing-an-authenticated-connection
+https://wafle.svn.codeplex.com/svn/trunk/Source/JNAWindowsAuthProvider/src/waffle/windows/auth/impl/WindowsAuthProviderImpl.java
