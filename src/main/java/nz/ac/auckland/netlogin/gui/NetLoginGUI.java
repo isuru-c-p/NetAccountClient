@@ -202,8 +202,10 @@ public class NetLoginGUI implements PingListener {
 		selectBodyPanel(disconnectedPanel);
 
 		Composite buttonPanel = SWTHelper.createButtonPanel(window);
-		connectButton = SWTHelper.createButton(buttonPanel, "Connect");
+		connectButton = SWTHelper.createButton(buttonPanel, "Disconnect");
 		connectButton.setToolTipText("Login to NetAccount");
+        connectButton.pack();
+        connectButton.setText("Connect");
 
 		connectButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
@@ -271,6 +273,7 @@ public class NetLoginGUI implements PingListener {
 		display.asyncExec(new Runnable() {
 			public void run() {
 				connectButton.setText("Connect");
+
 				selectBodyPanel(disconnectedPanel);
 
 				loginMenuItem.setEnabled(true);
