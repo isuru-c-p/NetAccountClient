@@ -144,7 +144,7 @@ public class NetLoginConnection {
 					state = ConnectionState.DISCONNECTED;
 					netLogin.connectionFailed(null);
 				} catch (Exception e) {
-                    e.printStackTrace();
+					//e.printStackTrace(); // debugging only!
 					state = ConnectionState.DISCONNECTED;
 					netLogin.connectionFailed(e.getMessage());
 				}

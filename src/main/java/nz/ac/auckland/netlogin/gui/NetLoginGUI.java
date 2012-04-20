@@ -360,7 +360,9 @@ public class NetLoginGUI implements PingListener {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			// failed, how do we handle this nicely?
+			// ignore for now
+			// ex.printStackTrace();
 		}
 	}
 
