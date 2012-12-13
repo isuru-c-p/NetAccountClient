@@ -6,6 +6,7 @@ import nz.ac.auckland.netlogin.NetLoginPreferences;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
+import nz.ac.auckland.netlogin.util.Platform;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -79,13 +80,20 @@ public class NetLoginGUI implements PingListener {
 		preferences = NetLoginPreferences.getInstance();
 		netLoginConnection = new NetLoginConnection(this);
 
-		loadLookAndFeel();
+        loadLookAndFeel();
 		createWindow();
 		createDialogs();
 		createMenuBar();
 		initBody();
 		initTrayIcon();
 	}
+
+    private void setupAppleMenu() {
+        CocoaUIEnhancer enhancer = new CocoaUIEnhancer("NetLogin");
+        Runnable myAboutAction = EventHandler.create(Runnable.class, this, "about");
+        Runnable myPreferencesAction = EventHandler.create(Runnable.class, this, "preferences");
+        enhancer.hookApplicationMenu(display, myAboutAction, myPreferencesAction);
+    }
 
 	private void createDialogs() {
 		loginDialog = new LoginDialog(window);
@@ -96,12 +104,14 @@ public class NetLoginGUI implements PingListener {
 	private void loadLookAndFeel() {
 		SystemSettings.setSystemPropertyDefault("apple.laf.useScreenMenuBar", "true");
 		SystemSettings.setSystemPropertyDefault("com.apple.macos.useScreenMenuBar", "true"); // historical
+        SystemSettings.setSystemPropertyDefault("com.apple.eawt.CocoaComponent.CompatibilityMode", "false");
 		SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.apple.menu.about.name", "NetLogin");
 		SystemSettings.setSystemPropertyDefault("com.apple.mrj.application.live-resize", "true");
 	}
 
 	public void createWindow() {
-		display = new Display();
+        display = new Display();
+        display.addListener(SWT.Close, EventHandler.create(Listener.class, this, "quit"));
 
 		if (isSystemTraySupported()) {
 			// create an invisible parent window, this hides the task bar
@@ -128,10 +138,14 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	private void run() {
+        // main thread loop
+        // process events while the window is alive
 		while (!window.isDisposed()) {
 			if (!display.readAndDispatch()) display.sleep();
 		}
+        // shut down user interface, and exit all threads
 		display.dispose();
+        System.exit(0);
 	}
 	
 	public void login() {
@@ -162,7 +176,6 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	public void initBody() {
-		window.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
 		window.setLayout(SWTHelper.createMinimalGridLayout());
 
 		bodyPanel = new Composite(window, SWT.EMBEDDED);
@@ -230,7 +243,7 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	public void connecting() {
-		display.asyncExec(new Runnable() {
+        updateUserInterface(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(false);
 				connectionErrorMessage.setText("");
@@ -240,7 +253,7 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	public void connectionFailed(final String message) {
-		display.asyncExec(new Runnable() {
+        updateUserInterface(new Runnable() {
 			public void run() {
 				connectButton.setEnabled(true);
 				selectBodyPanel(disconnectedPanel);
@@ -252,7 +265,8 @@ public class NetLoginGUI implements PingListener {
 	public void connected(final String username, int ipUsage, NetLoginPlan plan) {
 		this.connected = true;
 		update(ipUsage, plan);
-		display.asyncExec(new Runnable() {
+
+        updateUserInterface(new Runnable() {
 			public void run() {
 				userLabel.setText(username);
 				selectBodyPanel(connectedPanel);
@@ -270,7 +284,8 @@ public class NetLoginGUI implements PingListener {
 
 	public void disconnected() {
 		this.connected = false;
-		display.asyncExec(new Runnable() {
+
+        updateUserInterface(new Runnable() {
 			public void run() {
 				connectButton.setText("Connect");
 
@@ -284,7 +299,7 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	public void update(final int ipUsage, final NetLoginPlan plan) {
-		display.asyncExec(new Runnable() {
+        updateUserInterface(new Runnable() {
 			public void run() {
 				float ipUsageMb = (float) (Math.round((ipUsage / 1024.0) * 100)) / 100;
 				usageLabel.setText("" + ipUsageMb + " MBs");
@@ -294,44 +309,88 @@ public class NetLoginGUI implements PingListener {
 	}
 
 	private void createMenuBar() {
+        boolean full = true;
+        if (Platform.isMac()) {
+            setupAppleMenu();
+            full = false;
+        }
+
 		Menu menuBar = new Menu(window, SWT.BAR);
 		window.setMenuBar(menuBar);
 
-		Menu netLoginMenu = SWTHelper.createMenu(window, menuBar, "NetLogin", 'n');
+        Menu netLoginMenu;
+        if (full) {
+            netLoginMenu = SWTHelper.createMenu(window, menuBar, "NetLogin", 'n');
+        } else {
+            netLoginMenu = SWTHelper.createMenu(window, menuBar, "Connect", 'c');
+        }
+
 		loginMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Login", 'l');
 		logoutMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Logout", 'l');
 		logoutMenuItem.setEnabled(false);
-		SWTHelper.addMenuSeparator(netLoginMenu);
-		MenuItem preferencesMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Preferences", 'r');
-		SWTHelper.addMenuSeparator(netLoginMenu);
-		MenuItem quitMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Exit", 'x');
+
+        if (full) {
+            SWTHelper.addMenuSeparator(netLoginMenu);
+		    MenuItem preferencesMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Preferences", 'r');
+		    SWTHelper.addMenuSeparator(netLoginMenu);
+            MenuItem quitMenuItem = SWTHelper.createMenuItem(netLoginMenu, "Exit", 'x');
+
+            preferencesMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "preferences"));
+            quitMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "quit"));
+        }
 
 		Menu servicesMenu = SWTHelper.createMenu(window, menuBar, "Services", 's');
 		MenuItem changePassMenuItem = SWTHelper.createMenuItem(servicesMenu, "Change Password", 'p');
 		MenuItem chargeRatesMenuItem = SWTHelper.createMenuItem(servicesMenu, "Show Charge Rates", 'c');
 
-		Menu helpMenu = SWTHelper.createMenu(window, menuBar, "Help", 'h');
-		MenuItem aboutMenuItem = SWTHelper.createMenuItem(helpMenu, "About", 'a');
-
 		loginMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "login"));
 		logoutMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "disconnect"));
-		preferencesMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, preferencesDialog, "open"));
 		changePassMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "changePassword"));
-		quitMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "quit"));
-		aboutMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, aboutDialog, "open"));
 		chargeRatesMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "showChargeRates"));
+
+        if (full) {
+            Menu helpMenu = SWTHelper.createMenu(window, menuBar, "Help", 'h');
+      	    MenuItem aboutMenuItem = SWTHelper.createMenuItem(helpMenu, "About", 'a');
+            aboutMenuItem.addSelectionListener(EventHandler.create(SelectionListener.class, this, "about"));
+        }
 	}
 
+    @SuppressWarnings("unused")
+    public void about() {
+        updateUserInterface(new Runnable() {
+      	    public void run() {
+                aboutDialog.open();
+            }
+        });
+    }
+
+    @SuppressWarnings("unused")
+    public void preferences() {
+        updateUserInterface(new Runnable() {
+            public void run() {
+                preferencesDialog.open();
+            }
+        });
+    }
+
+    @SuppressWarnings("unused")
 	public void showChargeRates() {
 		openURL(helpURL);
 	}
 
+    @SuppressWarnings("unused")
 	public void changePassword() {
 		openURL(passwdChangeURL);
 	}
 
+    @SuppressWarnings("unused")
 	public void quit() {
-		System.exit(0);
+        disconnect();
+        updateUserInterface(new Runnable() {
+            public void run() {
+                if (!window.isDisposed()) window.dispose();
+            }
+        });
 	}
 
 	public static void openURL(String url) {
@@ -408,5 +467,16 @@ public class NetLoginGUI implements PingListener {
 			}
 		});
 	}
+
+    // run code in the SWT event thread, and ensure that we're still in a state that'll accept it
+    private void updateUserInterface(final Runnable runnable) {
+        if (display.isDisposed()) return;
+        display.asyncExec(new Runnable() {
+      		public void run() {
+                if (display.isDisposed()) return;
+                runnable.run();
+            }
+        });
+    }
 
 }

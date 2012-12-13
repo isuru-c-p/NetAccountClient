@@ -46,7 +46,8 @@
 			-->
 			<groupId>${swt.groupId}</groupId>
 			<artifactId>${swt.artifactId}</artifactId>
-			<version>3.7.2</version>
+			<version>4.2.1</version>
+            <!--<classifier>debug</classifier>-->
 			<!-- SWT isn't optional, but because it's platform specific let the caller choose an approperiate one -->
 			<optional>true</optional>
 		</dependency>
