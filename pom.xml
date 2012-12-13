@@ -111,11 +111,11 @@
 	<distributionManagement>
 		<repository>
 			<id>uoa</id>
-			<url>dav:http://waterfall.auckland.ac.nz/repository/uoa</url>
+			<url>dav:https://waterfall.auckland.ac.nz/nexus/content/repositories/releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>uoa-snapshots</id>
-			<url>dav:http://waterfall.auckland.ac.nz/repository/uoa-snapshots</url>
+			<url>dav:https://waterfall.auckland.ac.nz/nexus/content/repositories/snapshots</url>
 			<uniqueVersion>true</uniqueVersion>
 		</snapshotRepository>
 	</distributionManagement>
@@ -125,7 +125,7 @@
 		<repository>
 			<id>uoa</id>
 			<name>The University of Auckland repository</name>
-			<url>http://waterfall.auckland.ac.nz/repository/uoa</url>
+			<url>https://waterfall.auckland.ac.nz/nexus/content/repositories/releases</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
@@ -133,7 +133,7 @@
 		<repository>
 			<id>uoa-external</id>
 			<name>The University of Auckland repository of external artifacts</name>
-			<url>http://waterfall.auckland.ac.nz/repository/external</url>
+			<url>https://waterfall.auckland.ac.nz/nexus/content/repositories/thirdparty</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
