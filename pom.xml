@@ -3,7 +3,7 @@
 	<groupId>nz.ac.auckland.netlogin</groupId>
 	<artifactId>netlogin</artifactId>
 	<packaging>jar</packaging>
-	<version>4.0.1-SNAPSHOT</version>
+	<version>4.0.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,7 +34,7 @@
 	</profiles>
 
 	<scm>
-		<connection>scm:svn:https://subversion.auckland.ac.nz/svn/UoA.EC/NetAccountClient/Java/trunk</connection>
+		<connection>scm:svn:https://subversion.auckland.ac.nz/svn/UoA.EC/NetAccountClient/Java/tags/netlogin-4.0.1</connection>
 	</scm>
 
 	<dependencies>
