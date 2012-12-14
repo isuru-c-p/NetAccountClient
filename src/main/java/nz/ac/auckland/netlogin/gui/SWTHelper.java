@@ -35,20 +35,35 @@ public class SWTHelper {
 	}
 
 	public static MenuItem createMenuItem(Menu menu, String label, int accelerator) {
+        label = escapeMenuLabel(label, accelerator);
+        label += "\tCtrl+" + String.valueOf((char)accelerator).toUpperCase();
+
 		MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
-		menuItem.setText(label); // + "\tCtrl+" + String.valueOf(accelerator).toUpperCase()); // will this help?
+		menuItem.setText(label);
 		menuItem.setAccelerator(SWT.MOD1 | accelerator);
 		return menuItem;
 	}
 
-	public static Menu createMenu(Shell window, Menu menuBar, String label, int accelerator) {
+    public static Menu createMenu(Shell window, Menu menuBar, String label, int accelerator) {
+        label = escapeMenuLabel(label, accelerator);
+
 		Menu menu = new Menu(window, SWT.DROP_DOWN);
 		MenuItem menuItem = new MenuItem(menuBar, SWT.CASCADE);
 		menuItem.setMenu(menu);
-        menuItem.setText(label); // + "\tCtrl+" + String.valueOf(accelerator).toUpperCase()); // will this help?
+        menuItem.setText(label);
 		menuItem.setAccelerator(accelerator);
 		return menu;
 	}
+
+    private static String escapeMenuLabel(String label, int accelerator) {
+        String acceleratorStr = String.valueOf(accelerator).toUpperCase();
+        if (label.contains(acceleratorStr)) {
+            label = label.replaceFirst(acceleratorStr, "&" + acceleratorStr);
+        } else if (label.contains(acceleratorStr.toLowerCase())) {
+            label = label.replaceFirst(acceleratorStr.toLowerCase(), "&" + acceleratorStr.toLowerCase());
+        }
+        return label;
+    }
 
 	public static Font getStrongLabelFont() {
 		if (strongLabelFont == null) {
