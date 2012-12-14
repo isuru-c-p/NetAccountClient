@@ -36,8 +36,8 @@ public class SWTHelper {
 
 	public static MenuItem createMenuItem(Menu menu, String label, int accelerator) {
 		MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
-		menuItem.setText(label);
-		menuItem.setAccelerator(accelerator);
+		menuItem.setText(label); // + "\tCtrl+" + String.valueOf(accelerator).toUpperCase()); // will this help?
+		menuItem.setAccelerator(SWT.MOD1 | accelerator);
 		return menuItem;
 	}
 
@@ -45,7 +45,7 @@ public class SWTHelper {
 		Menu menu = new Menu(window, SWT.DROP_DOWN);
 		MenuItem menuItem = new MenuItem(menuBar, SWT.CASCADE);
 		menuItem.setMenu(menu);
-		menuItem.setText(label);
+        menuItem.setText(label); // + "\tCtrl+" + String.valueOf(accelerator).toUpperCase()); // will this help?
 		menuItem.setAccelerator(accelerator);
 		return menu;
 	}
