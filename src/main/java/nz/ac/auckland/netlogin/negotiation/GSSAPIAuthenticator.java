@@ -15,7 +15,7 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
     private final GSSManager manager;
     private GSSContext context;
 
-    public GSSAPIAuthenticator() throws GSSException {
+    public GSSAPIAuthenticator() throws GSSException, FileNotFoundException {
 	URL loginConfig = GSSAPIAuthenticator.class.getResource("/login.config");
 	if (loginConfig == null) throw new FileNotFoundException("Cannot find login.config");
 
