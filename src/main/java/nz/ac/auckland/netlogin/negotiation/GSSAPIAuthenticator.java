@@ -4,18 +4,23 @@ import nz.ac.auckland.netlogin.util.MessagePrefixUtil;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
 import javax.security.auth.login.LoginException;
+import java.net.URL;
+import java.io.FileNotFoundException;
 
 public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
 
     private static final GSSCredential DEFAULT_CREDENTIAL = null;
     private final Oid KRB5_MECHANISM;
-	private final Oid KRB5_PRINCIPAL_NAME_TYPE;
+    private final Oid KRB5_PRINCIPAL_NAME_TYPE;
     private final GSSManager manager;
     private GSSContext context;
 
     public GSSAPIAuthenticator() throws GSSException {
+	URL loginConfig = GSSAPIAuthenticator.class.getResource("/login.config");
+	if (loginConfig == null) throw new FileNotFoundException("Cannot find login.config");
+
         SystemSettings.setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
-        SystemSettings.setSystemPropertyDefault("java.security.auth.login.config", GSSAPIAuthenticator.class.getResource("/login.config").toString());
+        SystemSettings.setSystemPropertyDefault("java.security.auth.login.config", loginConfig.toString());
 		
         KRB5_MECHANISM = new Oid("1.2.840.113554.1.2.2");
         KRB5_PRINCIPAL_NAME_TYPE = new Oid("1.2.840.113554.1.2.2.1");
