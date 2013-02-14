@@ -16,12 +16,12 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
     private GSSContext context;
 
     public GSSAPIAuthenticator() throws GSSException, FileNotFoundException {
-	URL loginConfig = GSSAPIAuthenticator.class.getResource("/login.config");
-	if (loginConfig == null) throw new FileNotFoundException("Cannot find login.config");
+        URL loginConfig = GSSAPIAuthenticator.class.getClassLoader().getResource("login.config");
+        if (loginConfig == null) throw new FileNotFoundException("Cannot find login.config");
 
         SystemSettings.setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
         SystemSettings.setSystemPropertyDefault("java.security.auth.login.config", loginConfig.toString());
-		
+        
         KRB5_MECHANISM = new Oid("1.2.840.113554.1.2.2");
         KRB5_PRINCIPAL_NAME_TYPE = new Oid("1.2.840.113554.1.2.2.1");
         manager = GSSManager.getInstance();
@@ -53,7 +53,7 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
             context.requestMutualAuth(true); // mutual authentication
             context.requestConf(true); // confidentiality
             context.requestInteg(true); // integrity
-			context.requestReplayDet(true); // replay detection
+            context.requestReplayDet(true); // replay detection
             context.requestCredDeleg(false);
         } catch (GSSException e) {
             System.err.println("GSSAPI: " + e.getMessage());
