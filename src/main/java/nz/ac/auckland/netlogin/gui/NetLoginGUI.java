@@ -178,12 +178,12 @@ public class NetLoginGUI implements PingListener {
 	public void initBody() {
 		window.setLayout(SWTHelper.createMinimalGridLayout());
 
-		bodyPanel = new Composite(window, SWT.EMBEDDED);
+		bodyPanel = new Composite(window, SWT.NONE);
 		bodyPanel.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		bodyPanelLayout = new StackLayout();
 		bodyPanel.setLayout(bodyPanelLayout);
 
-		disconnectedPanel = new Composite(bodyPanel, SWT.EMBEDDED);
+		disconnectedPanel = new Composite(bodyPanel, SWT.NONE);
 		disconnectedPanel.setLayout(new GridLayout());
 		Label disconnectedLabel = SWTHelper.createStrongLabel(disconnectedPanel, "Not Connected");
 		disconnectedLabel.setAlignment(SWT.CENTER);
@@ -192,7 +192,7 @@ public class NetLoginGUI implements PingListener {
 		connectionErrorMessage.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, true, true));
 		connectionErrorMessage.setAlignment(SWT.CENTER);
 
-		connectingPanel = new Composite(bodyPanel, SWT.EMBEDDED);
+		connectingPanel = new Composite(bodyPanel, SWT.NONE);
 		connectingPanel.setLayout(new GridLayout());
 		Label connectingLabel = SWTHelper.createStrongLabel(connectingPanel, "Connecting...");
 		connectingLabel.setAlignment(SWT.CENTER);

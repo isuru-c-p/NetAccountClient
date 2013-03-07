@@ -122,7 +122,7 @@ public class SWTHelper {
 	public static Composite createButtonPanel(Composite parent) {
 		SWTHelper.addHorizontalSeparator(parent);
 
-		Composite buttonPanel = new Composite(parent, SWT.EMBEDDED);
+		Composite buttonPanel = new Composite(parent, SWT.NONE);
 		buttonPanel.setLayoutData(new GridData(GridData.FILL, GridData.END, true, false));
 
 		GridLayout buttonPanelLayout = new GridLayout(2, false);
@@ -132,7 +132,7 @@ public class SWTHelper {
 
 		addHorizontalGap(buttonPanel);
 
-		Composite buttonHolder = new Composite(buttonPanel, SWT.EMBEDDED);
+		Composite buttonHolder = new Composite(buttonPanel, SWT.NONE);
 		RowLayout buttonLayout = new RowLayout(SWT.HORIZONTAL);
 		buttonLayout.fill = true;
 		buttonLayout.spacing = 10;
@@ -165,7 +165,7 @@ public class SWTHelper {
 	}
 
 	public static Composite createForm(Composite parent) {
-		Composite formPanel = new Composite(parent, SWT.EMBEDDED);
+		Composite formPanel = new Composite(parent, SWT.NONE);
 		if (DEBUG_LAYOUT) formPanel.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_CYAN));
 		GridLayout formLayout = new GridLayout(2, false);
 		formLayout.marginTop = 5;
@@ -179,7 +179,7 @@ public class SWTHelper {
 	}
 
 	public static Composite createMargin(Shell dialog, int width, int height) {
-		Composite margin = new Composite(dialog, SWT.EMBEDDED);
+		Composite margin = new Composite(dialog, SWT.NONE);
 		FillLayout marginLayout = new FillLayout();
 		marginLayout.marginWidth = width;
 		marginLayout.marginHeight = height;

@@ -28,7 +28,7 @@ public class AboutDialog {
 		dialog.setLayout(SWTHelper.createMinimalGridLayout());
 		dialog.setText("NetLogin - About");
 
-		Composite iconMessage = new Composite(dialog, SWT.EMBEDDED);
+		Composite iconMessage = new Composite(dialog, SWT.NONE);
 		GridLayout iconMessageLayout = new GridLayout(2, false);
 		iconMessageLayout.marginTop = 5;
 		iconMessageLayout.marginBottom = 5;
