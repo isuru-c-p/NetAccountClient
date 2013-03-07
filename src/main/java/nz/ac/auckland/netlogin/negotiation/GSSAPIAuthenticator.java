@@ -3,8 +3,8 @@ package nz.ac.auckland.netlogin.negotiation;
 import nz.ac.auckland.netlogin.util.MessagePrefixUtil;
 import nz.ac.auckland.netlogin.util.SystemSettings;
 import org.ietf.jgss.*;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
-import java.net.URL;
 import java.io.FileNotFoundException;
 
 public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
@@ -16,12 +16,11 @@ public class GSSAPIAuthenticator extends AbstractGSSAuthenticator {
     private GSSContext context;
 
     public GSSAPIAuthenticator() throws GSSException, FileNotFoundException {
-        URL loginConfig = GSSAPIAuthenticator.class.getClassLoader().getResource("login.config");
-        if (loginConfig == null) throw new FileNotFoundException("Cannot find login.config");
-
         SystemSettings.setSystemPropertyDefault("javax.security.auth.useSubjectCredsOnly", "false");
-        SystemSettings.setSystemPropertyDefault("java.security.auth.login.config", loginConfig.toString());
-        
+        if (System.getProperty("java.security.auth.login.config") == null) {
+            Configuration.setConfiguration(new DefaultKerberosLoginConfiguration());
+        }
+
         KRB5_MECHANISM = new Oid("1.2.840.113554.1.2.2");
         KRB5_PRINCIPAL_NAME_TYPE = new Oid("1.2.840.113554.1.2.2.1");
         manager = GSSManager.getInstance();
