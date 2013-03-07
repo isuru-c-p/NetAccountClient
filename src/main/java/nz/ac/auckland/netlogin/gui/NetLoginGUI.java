@@ -86,6 +86,7 @@ public class NetLoginGUI implements PingListener {
 		createMenuBar();
 		initBody();
 		initTrayIcon();
+        window.pack();
 	}
 
     private void setupAppleMenu() {
@@ -133,7 +134,6 @@ public class NetLoginGUI implements PingListener {
 			});
 		}
 
-		window.setSize(270, 160);
 		window.setImages(Icons.getInstance().getWindowIcons());
 	}
 
@@ -470,10 +470,10 @@ public class NetLoginGUI implements PingListener {
 
     // run code in the SWT event thread, and ensure that we're still in a state that'll accept it
     private void updateUserInterface(final Runnable runnable) {
-        if (display.isDisposed()) return;
+        if (window.isDisposed() || display.isDisposed()) return;
         display.asyncExec(new Runnable() {
       		public void run() {
-                if (display.isDisposed()) return;
+                if (window.isDisposed() || display.isDisposed()) return;
                 runnable.run();
             }
         });
