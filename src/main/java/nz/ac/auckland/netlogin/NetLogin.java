@@ -19,7 +19,7 @@ public class NetLogin {
 		
 		if (args.length==0) {
 			// no command line startup
-			new NetLoginGUI();
+			new NetLoginGUI(false);
 		} else {
 			// command line startup
 			OptionParser parser = new OptionParser() {
@@ -68,8 +68,7 @@ public class NetLogin {
 					}
 
 				} else if (options.has("m")) {
-                    NetLoginGUI gui = new NetLoginGUI();
-                    gui.minimizeWindow();
+                    new NetLoginGUI(true);
                 }
 				
 			} catch(Exception e) {

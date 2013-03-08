@@ -1,9 +1,6 @@
 package nz.ac.auckland.netlogin.gui;
 
-import nz.ac.auckland.netlogin.NetLoginConnection;
-import nz.ac.auckland.netlogin.NetLoginPlan;
-import nz.ac.auckland.netlogin.NetLoginPreferences;
-import nz.ac.auckland.netlogin.PingListener;
+import nz.ac.auckland.netlogin.*;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 import nz.ac.auckland.netlogin.util.Platform;
@@ -60,10 +57,33 @@ public class NetLoginGUI implements PingListener {
 	private Composite bodyPanel;
 	private StackLayout bodyPanelLayout;
 
-	public NetLoginGUI() {
+	public NetLoginGUI(boolean minimise) {
 		initialize();
 		openWindow();
-		netLoginConnection.monitor();
+        if (minimise) {
+            new Thread() {
+                public void run() {
+                    netLoginConnection.automaticLogin();
+                    try {
+                        while (netLoginConnection.getState() == ConnectionState.CONNECTING) {
+                            Thread.sleep(20);
+                        }
+                    } catch (InterruptedException e) {
+                        // finish waiting
+                    }
+                    if (netLoginConnection.getState() == ConnectionState.CONNECTED) {
+                        updateUserInterface(new Runnable() {
+                            public void run() {
+                               minimizeWindow();
+                            }
+                        });
+                    }
+                    netLoginConnection.monitor();
+                }
+            }.start();
+        } else {
+            netLoginConnection.monitor();
+        }
 		run();
 	}
 
