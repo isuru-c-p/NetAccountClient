@@ -26,6 +26,7 @@ public class NetLogin {
 				{
 					accepts("u").withRequiredArg().ofType(String.class).describedAs("upi");
 					accepts("p").withOptionalArg().ofType(String.class).describedAs("password");
+                    accepts("m", "start minimised");
 					acceptsAll(Arrays.asList("g", "GUI", "gui"), "command line for upi and password input, but still display GUI interface");
 					acceptsAll(Arrays.asList("h", "?"), "show help");
 				}
@@ -65,7 +66,11 @@ public class NetLogin {
 						// pure command line with console
 						new NetLoginCLI(upi, password);
 					}
-				}
+
+				} else if (options.has("m")) {
+                    NetLoginGUI gui = new NetLoginGUI();
+                    gui.minimizeWindow();
+                }
 				
 			} catch(Exception e) {
 				System.err.println(e.getMessage());
