@@ -12,6 +12,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class AboutDialog {
 
@@ -78,9 +81,23 @@ public class AboutDialog {
 	}
 
 	public String readVersion() {
-        Package pkg = NetLogin.class.getPackage();
-        if (pkg == null) return null;
-        return pkg.getImplementationVersion();
+        String netloginBuildPropertiesFile = "META-INF/maven/nz.ac.auckland.netlogin/netlogin/pom.properties";
+        InputStream inputStream = NetLogin.class.getClassLoader().getResourceAsStream(netloginBuildPropertiesFile);
+        if (inputStream == null) return null;
+        try {
+            Properties props = new Properties();
+            props.load(inputStream);
+            return props.getProperty("version");
+        } catch (IOException e) {
+            // provide no version if none is found
+            return null;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // ignore
+            }
+        }
 	}
 
 }
