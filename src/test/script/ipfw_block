@@ -1,0 +1,3 @@
+#!/bin/bash
+ipfw add 100 deny ip from 130.216.191.182 to me
+#ipfw add 100 deny ip from me to 130.216.191.182
