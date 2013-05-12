@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.*;
 import java.beans.EventHandler;
 import java.lang.reflect.Method;
 
-public class NetLoginGUI implements PingListener {
+public class NetLoginGUI implements ConnectionListener {
 
 	private Display display;
 	private Shell window;

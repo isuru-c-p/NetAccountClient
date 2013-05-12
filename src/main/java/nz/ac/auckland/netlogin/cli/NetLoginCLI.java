@@ -1,12 +1,13 @@
 package nz.ac.auckland.netlogin.cli;
 
+import nz.ac.auckland.netlogin.ConnectionListener;
 import nz.ac.auckland.netlogin.NetLoginConnection;
 import nz.ac.auckland.netlogin.NetLoginPlan;
 import nz.ac.auckland.netlogin.PingListener;
 import nz.ac.auckland.netlogin.negotiation.CredentialsCallback;
 import nz.ac.auckland.netlogin.negotiation.PopulatedCredentialsCallback;
 
-public class NetLoginCLI implements PingListener {
+public class NetLoginCLI implements ConnectionListener {
 	
 	private NetLoginConnection netLoginConnection;
 	private boolean displayStatus = false;

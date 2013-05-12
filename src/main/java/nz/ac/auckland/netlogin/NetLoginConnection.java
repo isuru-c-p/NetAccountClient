@@ -13,7 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class NetLoginConnection {
+public class NetLoginConnection implements PingListener {
 		
 	final int AUTHD_PORT = 312; // The port that we are awaiting authd from.
 	final int PINGD_PORT = 443; // The port that we are awaiting pings from.
@@ -83,16 +83,20 @@ public class NetLoginConnection {
 	int lastModDate; 				//DATESTAMP FROM THE CHARGES FILE
 
 	private Authenticator authenticator;
-	private PingListener netLogin;
+	private ConnectionListener netLogin;
 
 	private ConnectionState state = ConnectionState.DISCONNECTED;
 	private ConnectionWatcher connectionWatcher;
 
-	public NetLoginConnection(PingListener netLogin) {
+	public NetLoginConnection(final ConnectionListener netLogin) {
 		this.netLogin = netLogin;
 	}
 
-	public void monitor() {
+    public void update(int ipUsage, NetLoginPlan plan) {
+        netLogin.update(ipUsage, plan);
+    }
+
+    public void monitor() {
 		if (connectionWatcher == null) connectionWatcher = new ConnectionWatcher(this);
 		connectionWatcher.monitor();
 	}
@@ -120,12 +124,12 @@ public class NetLoginConnection {
 				boolean useStaticPingPort = NetLoginPreferences.getInstance().getUseStaticPingPort();
 
 				try {
-					pinger = new PingSender(server, PINGD_PORT, netLogin);
+					pinger = new PingSender(server, PINGD_PORT, NetLoginConnection.this);
 					if(useStaticPingPort) {
-						pingReceiver = new PingRespHandler(netLogin, pinger, pinger.getSocket());
+						pingReceiver = new PingRespHandler(NetLoginConnection.this, pinger, pinger.getSocket());
 						responsePort = 0;
 					} else {
-						pingReceiver = new PingRespHandler(netLogin, pinger);
+						pingReceiver = new PingRespHandler(NetLoginConnection.this, pinger);
 						responsePort = pingReceiver.getLocalPort();
 					}
 
@@ -152,11 +156,22 @@ public class NetLoginConnection {
 		}.start();
 	}
 
-	public synchronized void logout() {
-		if (pinger != null) pinger.stopPinging();
-		if (pingReceiver != null) pingReceiver.end();
-		state = ConnectionState.DISCONNECTED;
+	public void logout() {
+        // user initiated disconnect
+		disconnect();
 	}
+
+    public void disconnected() {
+        // system initiated disconnect
+        disconnect();
+    }
+
+    private synchronized void disconnect() {
+        if (pinger != null) pinger.stopPinging();
+        if (pingReceiver != null) pingReceiver.end();
+        state = ConnectionState.DISCONNECTED;
+        netLogin.disconnected();
+    }
 
 	private void authenticate(String server, CredentialsCallback callback) throws IOException, LoginException {
 		authenticator = AuthenticatorFactory.getInstance().getSelectedAuthenticator();
