@@ -51,7 +51,7 @@ public class NetLoginGUI implements ConnectionListener {
 	private boolean useSystemTray = true;
 	private TrayItem trayIcon;
 
-	static String helpURL = "http://www.ec.auckland.ac.nz/docs/net-student.htm";
+	static String helpURL = "http://www.auckland.ac.nz/uoa/cs-internet";
 	static String passwdChangeURL = "https://iam.auckland.ac.nz/password/change";
 
 	private Composite bodyPanel;
